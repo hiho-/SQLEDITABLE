@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # coding: utf8
 
+# SQLEDITABLE plugin for web2py flamework
+# Copyrighted by Hitoshi Kato <hi21alt-gl@yashoo.co.jp>
+# License: LGPLv3
+
 from gluon import *
 from gluon.html import BUTTON
 from gluon.utils import web2py_uuid, simple_hash
@@ -115,7 +119,6 @@ class FieldInfo(object):
                 status = False
         return status
 
-
 class Header(object):
     def __init__(self, header, key_fields=[]):
         self.header = header
@@ -205,12 +208,22 @@ class Record(object):
     def __value(self, f):
         if f.name in self.record:
             value = self.record[f.name] 
+            if value == '':
+                return value
             if f.type == 'integer':
                 value = value if value else 0
-                return int(value)
+                try:
+                    value = int(value)
+                except:
+                    pass
+                return value
             if f.type == 'number':
                 value = value if value else 0
-                return float(value)
+                try:
+                    value = float(value)
+                except:
+                    pass
+                return value
             return value 
         return None
 
@@ -251,7 +264,6 @@ class RecordArray(object):
         if not isinstance(value, Record):
             raise TypeError('value mast be a Record object.')
         self.array.append(value.as_dict())
-    
 
 class EDITABLE(FORM):
     '''
@@ -280,13 +292,12 @@ class EDITABLE(FORM):
     '''
 
     def __init__(self, record, header, maxrow=None, lineno=True,
-                 url=None, validate_js=True, dateformat=DATE_FORMAT, 
-                 language=None, vertical=True, oninitialize=None, 
-                 deletable=False):
+                 url=None, validate_js=True, vertical=True, deletable=False, 
+                 oninit=None):
 
         self.editable_id = EDITABLE_ID
 
-        if self.is_ajax() is False:
+        if not self.is_ajax():
             if record and callable(record):
                 record = record()
                 
@@ -302,8 +313,7 @@ class EDITABLE(FORM):
 
             self.url = url if url else URL() 
             self.validate_js = validate_js
-            self.dateformat = dateformat
-            self.language = language if language else self.set_language()
+            # self.language = self.set_language()
             
             self.formname_id = FORMNAME_ID
             self.table_class = 'table table-bordered'
@@ -322,20 +332,28 @@ class EDITABLE(FORM):
             self.msg_failure_class = MSG_FAILURE_CLASS
             self.msg_process_dialog = current.T(MSG_PROCESS_DIALOG, lazy=False)
             self.process_dialog_class = PROCESS_DIALOG_CLASS
+            self.vertical = vertical
             
-            from gluon import current
-            response = current.response
-            response.files.append(URL('static/js','mindmup-editabletable.js'))
+            if oninit and callable(oninit):
+                oninit(self)
             
-            if oninitialize and callable(oninitialize):
-                oninitialize(self)
-            
+        if hasattr(self, 'table') and self.table and \
+                                                hasattr(self, 'define_header'):
+            # key list
+            key_fields = []
+            if hasattr(self.table, '_primarykey'):
+                for key in self.table._primarykey:
+                    key_fields.append(key)
+            else:
+                key_fields = [self.table._id.name]
+            header = Header(self.define_header(
+                    header, key_fields, self.showid, self.editid), key_fields)
+
         if isinstance(header, Header):
             self.header = header
         else:
             self.header = Header(header)
 
-        self.vertical = vertical
         self.deletable = deletable
         self.formkey_id = FORMKEY_ID
         self.msg_error_id=MSG_ERROR_ID
@@ -349,6 +367,25 @@ class EDITABLE(FORM):
         self.validate_all = False 
         self.errors = None
         self.o_record = None
+
+
+    @staticmethod
+    def init():
+        def extract(func):
+            r=func() 
+            if request.ajax:
+                if isinstance(r, dict):
+                    for v in r.values():
+                        if isinstance(v, SQLEDITABLE):
+                            return v
+            return r
+        
+        from gluon import current
+        response = current.response
+        request = current.request
+        response.files.append(URL('static/plugin_sqleditable/js',
+                                                    'mindmup-editabletable.js'))
+        response._caller=extract         
 
     def check_salt(self, salt, base64=False):
         if self.hash_salt_length <= 0:
@@ -502,9 +539,12 @@ class EDITABLE(FORM):
         return False
     
     def refresh_editable(self, editable):
+        if self.next_js and not self.errors:
+            script = 'location.href = "%s"' % self.next_js
+            return DIV(SCRIPT(script, _type='text/javascript'), editable)
+        
         if not isinstance(editable, DIV):
             editable = TAG(editable)
-
         # select
         selects = editable.elements('select')
         for select in selects:
@@ -540,7 +580,7 @@ class EDITABLE(FORM):
         head = [TH(self.lineno_label)] if self.lineno else []
         if self.vertical:
             if self.deletable:
-                head.append(TH(self.deleteable_label))
+                head.append(TH(self.deleteable_label, _class=DELETABLE_CLASS))
                 
             for f in self.header.readable():
                 head.append(TH(f.label))
@@ -561,6 +601,8 @@ class EDITABLE(FORM):
             default = field.inset['zero'] if 'zero' in field.inset else ''
             multiple = field.inset['multiple'] if 'multiple' in field.inset \
                                                                     else False
+            if not value:
+                value = default                
             if isinstance(value, (list,tuple)):
                 v = ','.join(value)
             else:
@@ -572,9 +614,10 @@ class EDITABLE(FORM):
                         map(None, field.inset['theset'], field.inset['labels'])]
             else:
                 opt = field.inset['theset']
+                
             select = SELECT(
                     opt,
-                    value= value if value else default, 
+                    value= value, 
                     _disabled=p_disabled,
                     _multiple= multiple,
                     _style='width:100%;')
@@ -613,7 +656,7 @@ class EDITABLE(FORM):
         p_style = ' '.join(p_style) if p_style else False
         td = TD(value, _style=p_style, _class =p_class,
                 _disabled=p_disabled, _name=type,
-                _id=id_type % dict(field=id, row=rowno)) 
+                _id=id_type % dict(field=id, row=rowno))
         return td
     
     def __deletable_tag(self, rowno):
@@ -685,7 +728,7 @@ class EDITABLE(FORM):
                 contents.append(TR(line))
         else:
             if self.deletable:
-                line = [TH(self.deleteable_label)]
+                line = [TH(self.deleteable_label, _class=DELETABLE_CLASS)]
                 for r in xrange(maxrow):
                     line.append(self.__deletable_tag(r))
                 contents.append(TR(line))
@@ -746,7 +789,7 @@ class EDITABLE(FORM):
         return BUTTON(value, _type='button', _class=_class, _style=_style, 
                       _id=id)
 
-    def build_js(self, validate=True):
+    def build_js(self):
         """
         build javascript for field check and ajax.  
         """
@@ -812,35 +855,49 @@ jQuery('#%(ajax_button_id)s').on('click', function () {
             msg_error_id=self.msg_error_id, 
             process_dialog=self.process_dialog_class)
         
-        checkbox_js =\
+        keydown_js =\
 """
-jQuery('input[type=checkbox]').on('click', function () {
-    if (jQuery(this).prop('checked')) {
-        jQuery(this).prop('checked', '');
-        jQuery(this).val('off');
-    } else {
-        jQuery(this).prop('checked', 'checked');
-        jQuery(this).val('on');
+jQuery(document).on('keydown', 'td:not(.%(noedit)s,.%(deletable)s)', function (e) {
+    var child = jQuery(this).children(':checkbox, select');
+    if (child.is(':checkbox')) {
+        if ( e.which === 13) {
+            child.trigger('click');
+            return false;
+        }
+    } else if (child.is('select')) {
+        if ( e.which === 13 ) {
+            child.focus();
+            return false;
+        }
     }
 });
-jQuery('td:not(.%(noedit)s):has(input[type=checkbox])').on('click', function () {
-    jQuery(this).children('input[type=checkbox]').triggerHandler('click');
+jQuery(document).on('keydown', 'select', function (e) {
+    if ( e.which === 13 || e.which === 38 || e.which === 40 || e.which === 9 || e.which === 27 ) {
+        jQuery(this).parent('td').focus();
+	return false;
+    }
+});
+""" % dict(noedit=NO_EDIT_CLASS, deletable=DELETABLE_CLASS)
+        
+        checkbox_js =\
+"""
+jQuery(document).on('click', ':checkbox', function (e) {
+    if (jQuery(this).prop('checked')) {
+        jQuery(this).val('on');
+    } else {
+        jQuery(this).val('off');
+    }
+    e.stopPropagation();
+});
+jQuery(document).on('click', 'td:not(.%(noedit)s):has(:checkbox)', function(e){
+    jQuery(this).children(':checkbox').trigger('click');
 });
 """ % dict(noedit=NO_EDIT_CLASS)  
             
         select_js =\
 """
-jQuery('td:not(.%(noedit)s)>select').on('change', function () {
+jQuery(document).on('change', 'td:not(.%(noedit)s)>select', function () {
     jQuery(this).next('div').text(jQuery(this).val());
-});
-jQuery('td:not(.%(noedit)s):has(select)').keydown(function (e) {
-    if ( e.which == 13 ) {
-        jQuery(this).children('select').focus();
-	return false;
-    }
-});
-jQuery('td:not(.%(noedit)s)>select').focusout(function () {
-    jQuery(this).parent('td').focus();
 });
 """ % dict(noedit=NO_EDIT_CLASS)  
      
@@ -852,10 +909,11 @@ jQuery(document).on('blur', 'input.%(field_class)s' , function (e) {
         jQuery('#'+id).text(jQuery(this).val());
 });
 jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
-    if ( e.which == 13 ) {
+    if ( e.which === 13 ) {
         var id = jQuery(this).attr('data-id');
         jQuery(this).hide();
         jQuery('#'+id).text(jQuery(this).val()).focus();
+        return false;
     }
 });
 """
@@ -863,7 +921,7 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
         # build logics
         script = tb_js
         # javascript validate
-        if validate:
+        if self.validate_js:
             for f in self.header.readable():
                 cond = []
                 if f.has_attr('range'):
@@ -908,7 +966,8 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
             if select is False and f.has_attr('inset'):
                 script += select_js
                 select = True
-               
+
+        script += keydown_js
         script = bind % (self.editable_id, script)
         script += triger
         script += ajax
@@ -934,7 +993,7 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
         btn = self.add_button(self.ajax_button_id, self.ajax_button_value,
                                self.ajax_button_class, self.ajax_button_style)
         # js
-        script = self.build_js(self.validate_js)
+        script = self.build_js()
         # process dialog
         dialog = self.process_dialog(self.msg_process_dialog)
         
@@ -1012,7 +1071,8 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
                 el[0] = value
             elif hasattr(el,'tag') and el.tag=='td':
                 td = TD(value, _class=el['_class'], _id=el['_id'], 
-                                _name=el['_name'], _tabindex=el['_tabindex'])
+                                _name=el['_name'], _tabindex=el['_tabindex'],
+                                _style=el['_style'])
                 editable.element(_id=el['_id'], replace=td)
     
     def set_error_class(self, editable, rowno, field=None):
@@ -1132,8 +1192,8 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
             return self.editable
         else:
             editable = self.build_editable()
-            return {'editable':DIV(editable[0],editable[2],editable[3]),
-                    'button': editable[1]}
+            return {'editable':DIV(editable[0],editable[2]),
+                    'button': editable[1], 'script': editable[3]}
 
     def xml(self):
         if self.editable:
@@ -1163,6 +1223,7 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
                     
         if request_vars.__class__.__name__ == 'Request':
             request_vars = request_vars.post_vars
+        self.next_js = kwargs.get('next_js', None)
         self.request_vars = Storage()
         self.request_vars.update(request_vars)
         self.session = session
@@ -1192,27 +1253,16 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
         return status
         
 class SQLEDITABLE(EDITABLE):
-    
     def __init__(self, table, record=None, deletable=False, header=None,
-                 maxrow=None, lineno=True, showid=True, url=None, 
-                 validate_js=True, dateformat=DATE_FORMAT, language=None, 
-                 vertical=True, id_writable=False, oninitialize=None):
+                 maxrow=None, lineno=True,  url=None, showid=True, editid=False,
+                 validate_js=True, vertical=True, oninit=None):
                  
         self.table = table
+        self.showid = showid
+        self.editid = editid
 
-        # key list
-        key_fields = []
-        if hasattr(table, '_primarykey'):
-            for key in table._primarykey:
-                key_fields.append(key)
-        else:
-            key_fields = [table._id.name]
-
-        header = Header(self.define_header(header, key_fields, showid, 
-                                           id_writable), key_fields)
         EDITABLE.__init__(self, record, header, maxrow, lineno, url, 
-                          validate_js, dateformat, language, vertical,
-                          oninitialize, deletable)
+                          validate_js, vertical, deletable, oninit)
 
         # record list
         if self.is_ajax() is False:
@@ -1222,7 +1272,7 @@ class SQLEDITABLE(EDITABLE):
                 self.record = self.db_read(record)
                 
     def define_header(self, fields=None, key_fields=None ,showid=True, 
-                                                            id_writable=False):
+                                                                editid=False):
         '''
         define header list
         - table: Table object
@@ -1284,21 +1334,25 @@ class SQLEDITABLE(EDITABLE):
                         h['type'] = 'string'
                     
                     if self.table[f].name in key_fields:
-                        h['writable'] = table[f].writable if id_writable else \
-                                                                        False
+                        h['writable'] = table[f].writable if editid else False
                         h['readable'] = table[f].readable if showid else False 
                     else:
                         h['writable'] = table[f].writable
                         h['readable'] = table[f].readable
                     if table[f].default is None:
-                        if 'inset' in h and 'zero' in h['inset']:
-                            h['default'] = h['inset']['zero']
+                        if 'inset' in h:
+                            if 'zero' in h['inset'] and h['inset']['zero']:
+                                h['default'] = h['inset']['zero']
+                            elif not('multiple' in h['inset'] and \
+                                                        h['inset']['multiple']):
+                                h['default'] = h['inset']['theset'][0]
                         elif h['type'] == 'boolean':
                             h['default'] = False
                         else:
                             h['default'] = ''
                     else:
                         h['default'] = table[f].default
+                    h['label'] = table[f].label
                     header.append(h)
         return header
 
@@ -1321,8 +1375,7 @@ class SQLEDITABLE(EDITABLE):
             editable = self.editable
         status = True
         for f,v in record.writable():
-            if f.is_key() is False and isinstance(self.table[f.name], 
-                                                                    Field):
+            if isinstance(self.table[f.name], Field):
                 value,error = \
                         self.field_validate(self.table[f.name].requires, v)
                 # set error class
@@ -1548,6 +1601,10 @@ class SQLEDITABLE(EDITABLE):
             for el in els:
                 el.remove_class(FIELD_DATE_CLASS)
                 el.add_class(NO_EDIT_CLASS)
+                for child in ['input', 'select']:
+                    child_el = el.element(child)
+                    if child_el:
+                        child_el['_disabled'] = 'disabled' 
 
             if self.record_hash_available:
                 value = {'record_hash':DUMMY_RECORD_HASH_VALUE, 'input_hash':''}

@@ -40,8 +40,8 @@ $.fn.editableTableWidget = function (options) {
 						.focus();
 					if (select) {
 						editor.select();
-                                    }
-				}
+                                    }                                
+                                }
 			},
 			setActiveText = function () {
 				var text = editor.val(),
@@ -113,6 +113,9 @@ $.fn.editableTableWidget = function (options) {
 				possibleMove.focus();
 			} else if (e.which === ENTER) {
 				showEditor(false);
+                                if (!active.length) {
+                                    prevent = false;
+                                }
 			} else if (e.which === 17 || e.which === 91 || e.which === 93) {
 				showEditor(true);
 				prevent = false;

@@ -39,6 +39,7 @@ FIELD_TIME_CLASS                = 'time'
 FIELD_DATETIME_CLASS            = 'datetime'
 FIELD_SELECT_CLASS              = 'select'
 NO_EDIT_CLASS                   = 'noedit'
+FIRST_CELL_CLASS                = 'first_cell'
 
 DEFAULT_BUTTON_VALUE            = 'OK'
 LINENO_LABEL                    = '#'
@@ -705,6 +706,7 @@ class EDITABLE(FORM):
         new_record = newrecord()
 
         if self.vertical:
+            first = True
             for r in xrange(maxrow):
                 record = set_record(r)
                 line = [TH('%0d' % (r+1))] if self.lineno else []
@@ -720,6 +722,9 @@ class EDITABLE(FORM):
                     if not f.writable:
                         p_disabled = True
                         p_class.append(NO_EDIT_CLASS)
+                    if first and f.readable and f.writable:
+                        p_class.append(FIRST_CELL_CLASS)
+                        first = False
 
                     value = v if not v is None else ''
                     line.append(self.__field_tag(f, value, r, p_class, p_style,
@@ -733,11 +738,12 @@ class EDITABLE(FORM):
                     line.append(self.__deletable_tag(r))
                 contents.append(TR(line))
                                 
+            first = True
             for f in self.header.all():  
                 line = []
                 if f.readable:
                     line.append(TH(f.label))
-                              
+                     
                 for r in xrange(maxrow):
                     record = set_record(r)
                     p_class = []
@@ -749,6 +755,9 @@ class EDITABLE(FORM):
                     if not f.writable:
                         p_disabled = True
                         p_class.append(NO_EDIT_CLASS)
+                    if first and f.readable and f.writable:
+                        p_class.append(FIRST_CELL_CLASS)
+                        first = False
 
                     value = record[f.name] if not record[f.name] is None else ''
                     line.append(self.__field_tag(f, value, r, p_class, p_style, 
@@ -808,6 +817,7 @@ class EDITABLE(FORM):
              'length' :"value.trim().length >= %d && value.trim().length <= %d",
              'integer':"value == parseInt(value) || value == ''",
              'number' :"(!isNaN(parseFloat(value)) && isFinite(value)) || value==''"}
+        focus  = "jQuery('.%s').focus();" % FIRST_CELL_CLASS
              
         ajax    = \
 """
@@ -843,6 +853,7 @@ jQuery('#%(ajax_button_id)s').on('click', function () {
     })
     .always(function (data) {
         jQuery('.%(process_dialog)s').modal('hide');
+        jQuery('.%(first_cell)s').focus();
     });
 });
 """ % dict( url=self.url, 
@@ -853,7 +864,8 @@ jQuery('#%(ajax_button_id)s').on('click', function () {
             msg_success=self.msg_success_class, 
             msg_failure=self.msg_failure_class,
             msg_error_id=self.msg_error_id, 
-            process_dialog=self.process_dialog_class)
+            process_dialog=self.process_dialog_class,
+            first_cell = FIRST_CELL_CLASS)
         
         keydown_js =\
 """
@@ -970,6 +982,7 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
         script += keydown_js
         script = bind % (self.editable_id, script)
         script += triger
+        script += focus
         script += ajax
         script = onload % script
         return script

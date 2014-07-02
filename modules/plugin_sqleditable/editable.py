@@ -368,7 +368,7 @@ class EDITABLE(FORM):
         self.validate_all = False 
         self.errors = None
         self.o_record = None
-
+        self.next = None
 
     @staticmethod
     def init():
@@ -540,8 +540,8 @@ class EDITABLE(FORM):
         return False
     
     def refresh_editable(self, editable):
-        if self.next_js and not self.errors:
-            script = 'location.href = "%s"' % self.next_js
+        if self.next and not self.errors:
+            script = 'location.href = "%s"' % self.next
             return DIV(SCRIPT(script, _type='text/javascript'), editable)
         
         if not isinstance(editable, DIV):
@@ -1231,12 +1231,18 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
         else:
             'en'
 
+    def process(self, **kwargs):  
+        self.next = kwargs.get('next', None)
+        if 'next' in kwargs:
+            del kwargs['next']
+        FORM.process(self, **kwargs)
+        return self
+
     def accepts(self, request_vars, session=None, formname=FORMNAME, 
                 onvalidation=None, hideerror=False, **kwargs):
                     
         if request_vars.__class__.__name__ == 'Request':
             request_vars = request_vars.post_vars
-        self.next_js = kwargs.get('next_js', None)
         self.request_vars = Storage()
         self.request_vars.update(request_vars)
         self.session = session

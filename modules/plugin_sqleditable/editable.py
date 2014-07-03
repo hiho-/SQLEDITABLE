@@ -807,7 +807,7 @@ class EDITABLE(FORM):
         bind    = "jQuery('#%s').on('load', function () {%s});\n"
         triger  = "jQuery('#%s').trigger('load');\n" % self.editable_id
         tb_js   = "jQuery('#%s').editableTableWidget();\n" % self.editable_id
-        validate= "jQuery('td.%s').on('validate', function (evt, value) {%s});\n"
+        validate= "jQuery('#%s').on('validate', 'td.%s', function (evt, value) {%s});\n"
         if_js   = "if(!(%s)){return false;\n}"
         elif_js = "else if(!(%s)){return false;\n}"
         else_js = "else{return !!(%s);\n}"
@@ -957,7 +957,8 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
                     else:
                         js += else_js % cd
                 if js:
-                    script += validate % (FIELD_CLASS_PREFIX + str(f.name), js)
+                    script += validate % (self.editable_id,
+                                        FIELD_CLASS_PREFIX + str(f.name), js)
         # date/time/checkbox/listbox
         date = time = datetime= boolean = select = False
         for f in self.header.readable():

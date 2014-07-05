@@ -559,6 +559,13 @@ class EDITABLE(FORM):
                         option['_selected'] = True
                     else:
                         option['_selected'] = False
+            elif not select['_multiple']:
+                for option in select.components:
+                    if option['_value'] == value:
+                        option['_selected'] = True
+                    else:
+                        option['_selected'] = False
+                
         # checkbox
         checkboxs = editable.elements(_type='checkbox')
         for checkbox in checkboxs:

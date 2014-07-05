@@ -43,8 +43,11 @@ input.error,td.error{
 td.__DELETABLE_, th.__DELETABLE_{
     background-color:yellow;
 }
-td:focus, input:focus:not(.error), select:focus{
+td:focus:not(.error), input:focus:not(.error), select:focus{
     background-color:paleturquoise;
+}
+td.error:focus {
+    background-color:thistle;
 }
 </style>
 {{end}}

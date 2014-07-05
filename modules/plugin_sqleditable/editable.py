@@ -46,6 +46,7 @@ LINENO_LABEL                    = '#'
 DELETABLE_LABEL                 = 'Del'
 MSG_PROCESS_DIALOG              = 'in process'
 DATE_FORMAT                     = 'yyyy-mm-dd'
+SELECTBOX_DEFALUT_LABEL         = '---'
 
 NEWRECORD_FLAG_FIELD            = '__newrecord__'
 DELETE_FLAG_FIELD               = '__delete__'
@@ -610,11 +611,13 @@ class EDITABLE(FORM):
                 v = value
             text = DIV(v, _style='display:none;',
                        _id=CELL_ID_FORMAT % dict(field=id, row=rowno))
+            opt = [OPTION(SELECTBOX_DEFALUT_LABEL, _value='')] \
+                                                        if not multiple else []
             if field.inset['labels']:
-                opt = [OPTION(l, _value=v) for v, l in \
+                opt += [OPTION(l, _value=v) for v, l in \
                         map(None, field.inset['theset'], field.inset['labels'])]
             else:
-                opt = field.inset['theset']
+                opt += field.inset['theset']
                 
             select = SELECT(
                     opt,
@@ -1363,9 +1366,6 @@ class SQLEDITABLE(EDITABLE):
                         if 'inset' in h:
                             if 'zero' in h['inset'] and h['inset']['zero']:
                                 h['default'] = h['inset']['zero']
-                            elif not('multiple' in h['inset'] and \
-                                                        h['inset']['multiple']):
-                                h['default'] = h['inset']['theset'][0]
                         elif h['type'] == 'boolean':
                             h['default'] = False
                         else:

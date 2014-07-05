@@ -894,7 +894,7 @@ jQuery(document).on('keydown', 'td:not(.%(noedit)s,.%(deletable)s)', function (e
     }
 });
 jQuery(document).on('keydown', 'select', function (e) {
-    if ( e.which === 13 || e.which === 38 || e.which === 40 || e.which === 9 || e.which === 27 ) {
+    if ( e.which === 13 || e.which === 9 || e.which === 27 ) {
         jQuery(this).parent('td').focus();
 	return false;
     }

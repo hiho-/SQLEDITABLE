@@ -40,7 +40,7 @@ $.fn.editableTableWidget = function (options) {
                                             editor = editor_string;
                                         }
 					editor.val(active.text())
-						.removeClass('error')
+						.removeClass()
                                                 .addClass(active.attr('class').replace(/error/g,''))
                                                 .attr('data-id', active.attr('id'))
 						.show()

@@ -40,6 +40,7 @@ FIELD_DATETIME_CLASS            = 'datetime'
 FIELD_SELECT_CLASS              = 'select'
 NO_EDIT_CLASS                   = 'noedit'
 FIRST_CELL_CLASS                = 'first_cell'
+CLASS_PREFIX_FOR_MOBILE         = 'm'
 
 DEFAULT_BUTTON_VALUE            = 'OK'
 LINENO_LABEL                    = '#'
@@ -226,6 +227,12 @@ class Record(object):
                 except:
                     pass
                 return value
+            if f.type == 'time':
+                if isinstance(value,str):
+                    ls = value.split(':')
+                    while range(3-len(ls)):
+                        ls.append('00')
+                    return ':'.join(ls)
             return value 
         return None
 
@@ -295,7 +302,7 @@ class EDITABLE(FORM):
 
     def __init__(self, record, header, maxrow=None, lineno=True,
                  url=None, validate_js=True, vertical=True, deletable=False, 
-                 oninit=None):
+                 oninit=None, **kwargs):
 
         self.editable_id = EDITABLE_ID
 
@@ -311,8 +318,6 @@ class EDITABLE(FORM):
             else:
                 self.record = None
             
-            from gluon import current
-
             self.url = url if url else URL() 
             self.validate_js = validate_js
             # self.language = self.set_language()
@@ -329,6 +334,18 @@ class EDITABLE(FORM):
             self.ajax_button_value = current.T(DEFAULT_BUTTON_VALUE)
             self.ajax_button_class = 'btn btn-primary btn-lg'
             self.ajax_button_style = 'padding:10px 20px'
+
+            self.touch_device = kwargs.get('touch_device', 'Auto')
+            if self.touch_device == 'Auto':
+                self.touch_device = self.is_touch_device()
+            if self.touch_device:
+                class_prefix_mobile = CLASS_PREFIX_FOR_MOBILE
+            else:
+                class_prefix_mobile = ''
+            self.field_date_class = class_prefix_mobile+FIELD_DATE_CLASS
+            self.field_time_class = class_prefix_mobile+FIELD_TIME_CLASS
+            self.field_datetime_class = class_prefix_mobile+FIELD_DATETIME_CLASS
+
 
             self.msg_success_class = MSG_SUCCESS_CLASS 
             self.msg_failure_class = MSG_FAILURE_CLASS
@@ -648,15 +665,15 @@ class EDITABLE(FORM):
             id_type = PARENT_ID_FORMAT
 
         elif type == 'date':
-            p_class.append(FIELD_DATE_CLASS)
+            p_class.append(self.field_date_class)
             id_type = CELL_ID_FORMAT
             
         elif type == 'time':
-            p_class.append(FIELD_TIME_CLASS)
+            p_class.append(self.field_time_class)
             id_type = CELL_ID_FORMAT
             
         elif type == 'datetime':
-            p_class.append(FIELD_DATETIME_CLASS)
+            p_class.append(self.field_datetime_class)
             id_type = CELL_ID_FORMAT
             
         else:
@@ -977,14 +994,15 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
                 script += checkbox_js
                 boolean = True
             if date is False and (f.type == 'date' and f.writable==True):
-                script += date_time_js % dict(field_class=FIELD_DATE_CLASS)
+                script += date_time_js % dict(field_class=self.field_date_class)
                 date = True
             if time is False and (f.type == 'time' and f.writable==True): 
-                script += date_time_js % dict(field_class=FIELD_TIME_CLASS)
+                script += date_time_js % dict(field_class=self.field_time_class)
                 time = True
             if datetime is False and \
                                     (f.type == 'datetime' and f.writable==True): 
-                script += date_time_js % dict(field_class=FIELD_DATETIME_CLASS)
+                script += date_time_js % \
+                                    dict(field_class=self.field_datetime_class)
                 datetime = True
             if select is False and f.has_attr('inset'):
                 script += select_js
@@ -1233,7 +1251,15 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
             return True
         else:
             return False
-        
+    
+    def is_touch_device(self):
+        from gluon import current
+        user_agent = current.request.user_agent()
+        if user_agent.is_mobile or user_agent.is_tablet:
+            return True
+        else:
+            return False
+    
     def set_language(self):
         from gluon import current
         request_vars = current.request.env
@@ -1258,6 +1284,8 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
         self.request_vars.update(request_vars)
         self.session = session
         self.formname = formname
+        if not self.next:
+            self.next = kwargs.get('next', None)
         self.errors = []
 
         status = True
@@ -1285,14 +1313,14 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
 class SQLEDITABLE(EDITABLE):
     def __init__(self, table, record=None, deletable=False, header=None,
                  maxrow=None, lineno=True,  url=None, showid=True, editid=False,
-                 validate_js=True, vertical=True, oninit=None):
+                 validate_js=True, vertical=True, oninit=None, **kwargs):
                  
         self.table = table
         self.showid = showid
         self.editid = editid
 
         EDITABLE.__init__(self, record, header, maxrow, lineno, url, 
-                          validate_js, vertical, deletable, oninit)
+                          validate_js, vertical, deletable, oninit, **kwargs)
 
         # record list
         if self.is_ajax() is False:
@@ -1626,7 +1654,6 @@ class SQLEDITABLE(EDITABLE):
 
             els = self.pick_element(self.editable, rowno, mode='td-all')
             for el in els:
-                el.remove_class(FIELD_DATE_CLASS)
                 el.add_class(NO_EDIT_CLASS)
                 for child in ['input', 'select']:
                     child_el = el.element(child)

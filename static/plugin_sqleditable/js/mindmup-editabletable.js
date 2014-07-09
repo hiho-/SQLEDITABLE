@@ -11,26 +11,37 @@ $.fn.editableTableWidget = function (options) {
 			ARROW_LEFT = 37, ARROW_UP = 38, ARROW_RIGHT = 39, ARROW_DOWN = 40, ENTER = 13, ESC = 27, TAB = 9,
 			element = $(this),
 			editor_string = activeOptions.editor.css('position', 'absolute').hide().appendTo(element.parent()),
-			editor_date = editor_string.clone().addClass('date').appendTo(element.parent()),
-			editor_time = editor_string.clone().addClass('time').appendTo(element.parent()),
-			editor_datetime = editor_string.clone().addClass('datetime').appendTo(element.parent()),
+			editor_date = editor_string.clone().appendTo(element.parent()),
+			editor_time = editor_string.clone().appendTo(element.parent()),
+			editor_datetime = editor_string.clone().appendTo(element.parent()),
                         editor = editor_string,
 			active,
 			showEditor = function (select) {
 				active = element.find('td:not(.noedit,.parent):focus');
 				if (active.length) {
-                                        if (active.hasClass('date')) {
+                                        if (active.attr('name') === 'date') {
+                                            if (!active.hasClass('date')){
+                                                editor_date.attr('type','date');
+                                            }
                                             editor = editor_date;
-                                        } else if (active.hasClass('time')) {
+                                        } else if (active.attr('name') === 'time') {
+                                            if (!active.hasClass('time')){
+                                                editor_time.attr('type','time');
+                                                editor_time.attr('step','1');
+                                            }
                                             editor = editor_time;
-                                        } else if (active.hasClass('datetime')) {
+                                        } else if (active.attr('name') === 'datetime') {
+                                            if (!active.hasClass('datetime')){
+                                                editor_datetime.attr('type','datetime');
+                                                editor_time.attr('step','1');
+                                            }
                                             editor = editor_datetime;
                                         } else {
                                             editor = editor_string;
                                         }
 					editor.val(active.text())
 						.removeClass('error')
-                                             //   .addClass(active.attr('class'))
+                                                .addClass(active.attr('class').replace(/error/g,''))
                                                 .attr('data-id', active.attr('id'))
 						.show()
 						.offset(active.offset())

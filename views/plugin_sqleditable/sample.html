@@ -26,6 +26,12 @@
 
 {{block head}}
 {{super}}
+<script type="text/javascript"><!--
+    var agent = navigator.userAgent;
+    if(agent.search(/Android/) != -1 || agent.search(/iPhone/) != -1 || agent.search(/iPad/) != -1 || agent.search(/iPod/) != -1){
+        jQuery(document).off('click', 'input.date,input.datetime,input.time');
+    }
+//--></script>
 <style>
 th {
     background-color:Gainsboro;

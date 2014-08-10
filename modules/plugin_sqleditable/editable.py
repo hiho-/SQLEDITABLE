@@ -395,7 +395,7 @@ class EDITABLE(FORM):
             if request.ajax:
                 if isinstance(r, dict):
                     for v in r.values():
-                        if isinstance(v, SQLEDITABLE):
+                        if isinstance(v, EDITABLE):
                             return v
             return r
         

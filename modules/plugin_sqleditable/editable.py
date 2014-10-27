@@ -1679,6 +1679,7 @@ class SQLEDITABLE(EDITABLE):
         
         #create/update/delete
         status = True
+        record_cud = False
         for r, rec in enumerate(self.o_record):
             if rec.has_field(NOTCHANGED_FLAG_FIELD):
                 continue
@@ -1698,14 +1699,18 @@ class SQLEDITABLE(EDITABLE):
             if recordhash_status is True:
                 if rec.has_field(DELETE_FLAG_FIELD):
                     status = db_delete(rec, r)
+                    record_cud = True
                 else:
                     if self.validate_all or self.record_validate(rec, r):
                         if rec.has_field(NEWRECORD_FLAG_FIELD):
                             status = db_create(rec, r)
                         else:
                             status = db_update(rec, r)
+                        record_cud = True
             else:
                     status = False
+        if status and record_cud:
+            self.table._db.commit()
         return bool(status)
         
     def accepts(self, request_vars,session=None, formname='tb_%(tablename)s', 

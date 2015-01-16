@@ -1359,11 +1359,33 @@ class SQLEDITABLE(EDITABLE):
         
         if fields is None:
             fields = table.fields
+        else:
+            for k in key_fields:
+                fields_add = True
+                for f in fields:
+                    if isinstance(f, dict):
+                        if k == f['field']:
+                            fields_add = False
+                            break
+                    else:
+                        if k == f:
+                            fields_add = False
+                            break
+                if fields_add:
+                    fields.append(k)
         header = []
 
         for f in fields:
             if isinstance(f, dict):
                 header.append(f)
+            elif not(f in table) or isinstance(table[f], (Field.Virtual)):
+                h = {'field': f}
+                h['type'] = 'string'
+                h['writable'] = False
+                h['readable'] = True
+                h['default'] = ''
+                h['label'] = ''
+                header.append(h)
             else:
                 if table[f].readable:
                     h = {'field': f}

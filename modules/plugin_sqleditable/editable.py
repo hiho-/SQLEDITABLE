@@ -155,6 +155,11 @@ class Header(object):
             if self.__getattr__(f).writable is True:
                 yield self.__getattr__(f)
 
+    def virtual(self):
+        for f in self.fields:
+            if self.__getattr__(f).virtual is True:
+                yield self.__getattr__(f)
+
     def key(self):
         for k in self.key_fields:
             yield self.__getattr__(k)
@@ -292,6 +297,7 @@ class EDITABLE(FORM):
              - 'readable': True/False                           default=True
              - 'writable': True/False                           default=True
              - 'default': field value                           default=0 or ''
+             - 'virtual': True/False                            default=False
         
         record : dict of one record
          {'field1':value1, 'field1':value2, ....., '__rechash__':hash}
@@ -1385,6 +1391,7 @@ class SQLEDITABLE(EDITABLE):
                 h['readable'] = True
                 h['default'] = ''
                 h['label'] = ''
+                h['virtual'] = True
                 header.append(h)
             else:
                 if table[f].readable:
@@ -1430,6 +1437,7 @@ class SQLEDITABLE(EDITABLE):
                     else:
                         h['default'] = table[f].default
                     h['label'] = table[f].label
+                    h['virtual'] = False    
                     header.append(h)
         return header
 
@@ -1625,6 +1633,9 @@ class SQLEDITABLE(EDITABLE):
                 for key in record.key_list():
                     self.update_field_element(self.editable, rowno, 
                                                                 rec[key], key)
+                for f in record.header.virtual():
+                    self.update_field_element(self.editable, rowno, 
+                                                                rec[f.name], f.name)
             return result
 
         def db_update(record, rowno):
@@ -1656,6 +1667,10 @@ class SQLEDITABLE(EDITABLE):
                     value['input_hash'] = self.generate_inputhash(rec)
                     self.update_field_element(self.editable, rowno, value, 
                                                             special='key')
+                    for f in record.header.virtual():
+                        self.update_field_element(self.editable, rowno, 
+                                                                rec[f.name], f.name)
+
                 return result
             else:
                 return False

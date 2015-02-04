@@ -1110,7 +1110,7 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
                     if 'input_hash' in value:
                         el[INPUT_HASH_TAG_ATTR] = value['input_hash']
         # field
-        elif field:
+        elif field and value:
             el = self.pick_element(editable, rowno, field)
             if hasattr(el,'tag') and el.tag=='input/' and \
                                                     el['_type']=='checkbox':

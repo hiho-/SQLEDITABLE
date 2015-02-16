@@ -633,7 +633,7 @@ class EDITABLE(FORM):
             default = field.inset['zero'] if 'zero' in field.inset else ''
             multiple = field.inset['multiple'] if 'multiple' in field.inset \
                                                                     else False
-            if not value:
+            if value is None:
                 value = default                
             if isinstance(value, (list,tuple)):
                 v = ','.join(value)

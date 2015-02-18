@@ -1283,7 +1283,7 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
         else:
             'en'
 
-    def process(self, **kwargs):  
+    def process(self, **kwargs):
         self.next = kwargs.get('next', None)
         if 'next' in kwargs:
             del kwargs['next']
@@ -1299,6 +1299,7 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
         self.request_vars.update(request_vars)
         self.session = session
         self.formname = formname
+        self.onvalidation = onvalidation
         if not self.next:
             self.next = kwargs.get('next', None)
         self.errors = []
@@ -1465,6 +1466,34 @@ class SQLEDITABLE(EDITABLE):
         return value, None
 
     def record_validate(self, record, rowno, editable=None):
+        def set_error(error, field):
+            self.set_error_class(editable, rowno, field)
+            if not error in self.errors:
+                self.errors.append(error)
+
+        def call_as_list(f,*a,**b):
+            if not isinstance(f, (list,tuple)):
+                f = [f]
+            for item in f:
+                item(*a,**b)
+
+        def onvalidation():
+            from storage import Storage
+            form = Storage()
+            form.vars = Storage()
+            form.errors = Storage()
+            for f,v in record.real():
+                form.vars[f.name] = v
+            call_as_list(self.onvalidation, form)
+            if form.errors:
+                for e in form.errors:
+                    set_error(form.errors[e], e)
+                return False
+            else:
+                for f in form.vars:
+                    record[f] = form.vars[f]
+                return True
+
         if editable is None:
             editable = self.editable
         status = True
@@ -1474,12 +1503,12 @@ class SQLEDITABLE(EDITABLE):
                         self.field_validate(self.table[f.name].requires, v)
                 # set error class
                 if error:
-                    self.set_error_class(editable, rowno, f.name)
-                    if not error in self.errors:
-                        self.errors.append(error)
+                    set_error(error, f.name)
                     status = False
                 else:
                     record[f.name] = value
+        if status and self.onvalidation:
+            status = onvalidation()
         return status
 
     def generate_recordhash(self, record):
@@ -1768,7 +1797,7 @@ class SQLEDITABLE(EDITABLE):
         self.parcel_update = parcel_update
         formname = formname % dict(tablename=self.table._tablename)
         status = EDITABLE.accepts(self, request_vars, session, formname,
-                                                                    **kwargs)
+                                                        onvalidation, **kwargs)
         if status:
             status = self.db_cud()
             if status:

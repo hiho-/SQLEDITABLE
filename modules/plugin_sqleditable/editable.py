@@ -1402,51 +1402,50 @@ class SQLEDITABLE(EDITABLE):
                 h['virtual'] = True
                 header.append(h)
             else:
-                if table[f].readable:
-                    h = {'field': f}
-                    h.update(check_validators(table[f].requires))
-                    if table[f].type == 'integer' or table[f].type == 'bigint' :
+                h = {'field': f}
+                h.update(check_validators(table[f].requires))
+                if table[f].type == 'integer' or table[f].type == 'bigint' :
+                    h['type'] = 'integer'
+                elif table[f].type == 'double':
+                    h['type'] = 'number'
+                elif table[f].type == 'float':
+                    h['type'] = 'number'
+                elif table[f].type.startswith('decimal'):
+                    _,scale = table[f].type[7:].strip('()').split(',')
+                    if scale ==0 :
                         h['type'] = 'integer'
-                    elif table[f].type == 'double':
+                    else:
                         h['type'] = 'number'
-                    elif table[f].type == 'float':
-                        h['type'] = 'number'
-                    elif table[f].type.startswith('decimal'):
-                        _,scale = table[f].type[7:].strip('()').split(',')
-                        if scale ==0 :
-                            h['type'] = 'integer'
-                        else:
-                            h['type'] = 'number'
-                    elif table[f].type == 'boolean':
-                        h['type'] = 'boolean'        
-                    elif table[f].type == 'datetime':
-                        h['type'] = 'datetime'        
-                    elif table[f].type == 'date':
-                        h['type'] = 'date'        
-                    elif table[f].type == 'time':
-                        h['type'] = 'time'        
+                elif table[f].type == 'boolean':
+                    h['type'] = 'boolean'        
+                elif table[f].type == 'datetime':
+                    h['type'] = 'datetime'        
+                elif table[f].type == 'date':
+                    h['type'] = 'date'        
+                elif table[f].type == 'time':
+                    h['type'] = 'time'        
+                else:
+                    h['type'] = 'string'
+                
+                if self.table[f].name in key_fields:
+                    h['writable'] = table[f].writable if editid else False
+                    h['readable'] = table[f].readable if showid else False 
+                else:
+                    h['writable'] = table[f].writable
+                    h['readable'] = table[f].readable
+                if table[f].default is None:
+                    if 'inset' in h:
+                        if 'zero' in h['inset'] and h['inset']['zero']:
+                            h['default'] = h['inset']['zero']
+                    elif h['type'] == 'boolean':
+                        h['default'] = False
                     else:
-                        h['type'] = 'string'
-                    
-                    if self.table[f].name in key_fields:
-                        h['writable'] = table[f].writable if editid else False
-                        h['readable'] = table[f].readable if showid else False 
-                    else:
-                        h['writable'] = table[f].writable
-                        h['readable'] = table[f].readable
-                    if table[f].default is None:
-                        if 'inset' in h:
-                            if 'zero' in h['inset'] and h['inset']['zero']:
-                                h['default'] = h['inset']['zero']
-                        elif h['type'] == 'boolean':
-                            h['default'] = False
-                        else:
-                            h['default'] = ''
-                    else:
-                        h['default'] = table[f].default
-                    h['label'] = table[f].label
-                    h['virtual'] = False    
-                    header.append(h)
+                        h['default'] = ''
+                else:
+                    h['default'] = table[f].default
+                h['label'] = table[f].label
+                h['virtual'] = False    
+                header.append(h)
         return header
 
     def field_validate(self, requires, value):
@@ -1632,7 +1631,7 @@ class SQLEDITABLE(EDITABLE):
     def db_cud(self):
 
         def db_create(record, rowno):
-            fields = dict([(f.name,v) for f,v in record.writable()])
+            fields = dict([(f.name,v) for f,v in record.real()])
             try:
                 result = self.table.insert(**fields)
             except Exception as e:

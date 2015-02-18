@@ -160,6 +160,11 @@ class Header(object):
             if self.__getattr__(f).virtual is True:
                 yield self.__getattr__(f)
 
+    def real(self):
+        for f in self.fields:
+            if self.__getattr__(f).virtual is not True:
+                yield self.__getattr__(f)
+
     def key(self):
         for k in self.key_fields:
             yield self.__getattr__(k)
@@ -211,6 +216,10 @@ class Record(object):
 
     def writable(self):
         for f in self.header.writable():
+            yield f, self.__value(f)
+
+    def real(self):
+        for f in self.header.real():
             yield f, self.__value(f)
 
     def __value(self, f):
@@ -1333,7 +1342,7 @@ class SQLEDITABLE(EDITABLE):
             if self.record and not isinstance(self.record, RecordArray):
                 self.record = self.db_read(self.record)
             elif self.record is None:
-                self.record = self.db_read(record)
+                self.record = self.db_read(None)
                 
     def define_header(self, fields=None, key_fields=None ,showid=True, 
                                                                 editid=False):
@@ -1474,7 +1483,7 @@ class SQLEDITABLE(EDITABLE):
         return status
 
     def generate_recordhash(self, record):
-        serialized = '|'.join(str(v) for _, v in record.all() if v)
+        serialized = '|'.join(str(v) for _, v in record.real() if v)
         return self.generate_hash(serialized)
 
     def table_set(self, record):
@@ -1561,7 +1570,7 @@ class SQLEDITABLE(EDITABLE):
         if not record:
             limit = (0, self.maxrow) if self.maxrow else None
             record_data = self.table._db(self.table).select(limitby=limit)\
-                                                                    .as_list()
+                                                    .as_list(custom_types=DIV)
             record_data = RecordArray(record_data, self.header)
             if self.record_hash_available:
                 for rec in record_data:

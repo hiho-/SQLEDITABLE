@@ -1327,11 +1327,13 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
 class SQLEDITABLE(EDITABLE):
     def __init__(self, table, record=None, deletable=False, header=None,
                  maxrow=None, lineno=True,  url=None, showid=True, editid=False,
-                 validate_js=True, vertical=True, oninit=None, **kwargs):
+                 validate_js=True, vertical=True, oninit=None, 
+                 update_display_record=False, **kwargs):
                  
         self.table = table
         self.showid = showid
         self.editid = editid
+        self.update_display_record = update_display_record
 
         EDITABLE.__init__(self, record, header, maxrow, lineno, url, 
                           validate_js, vertical, deletable, oninit, **kwargs)
@@ -1668,8 +1670,13 @@ class SQLEDITABLE(EDITABLE):
                 for key in record.key_list():
                     self.update_field_element(self.editable, rowno, 
                                                                 rec[key], key)
-                for f in record.header.virtual():
-                    self.update_field_element(self.editable, rowno, 
+                if self.update_display_record:
+                    for f in record.header.readable():
+                        self.update_field_element(self.editable, rowno, 
+                                                                rec[f.name], f.name)
+                else:
+                    for f in record.header.virtual():
+                        self.update_field_element(self.editable, rowno, 
                                                                 rec[f.name], f.name)
             return result
 
@@ -1702,10 +1709,14 @@ class SQLEDITABLE(EDITABLE):
                     value['input_hash'] = self.generate_inputhash(rec)
                     self.update_field_element(self.editable, rowno, value, 
                                                             special='key')
-                    for f in record.header.virtual():
-                        self.update_field_element(self.editable, rowno, 
-                                                                rec[f.name], f.name)
-
+                    if self.update_display_record:
+                        for f in record.header.readable():
+                            self.update_field_element(self.editable, rowno, 
+                                                                    rec[f.name], f.name)
+                    else:
+                        for f in record.header.virtual():
+                            self.update_field_element(self.editable, rowno, 
+                                                                    rec[f.name], f.name)
                 return result
             else:
                 return False

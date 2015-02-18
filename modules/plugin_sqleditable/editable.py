@@ -328,10 +328,8 @@ class EDITABLE(FORM):
             if record and isinstance(record, (list, tuple)) and \
                                                 isinstance(record[0] , dict):
                 self.record = RecordArrey(record, header) 
-            elif record:
-                self.record = record
             else:
-                self.record = None
+                self.record = record
             
             self.url = url if url else URL() 
             self.validate_js = validate_js

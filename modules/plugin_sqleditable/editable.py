@@ -1524,7 +1524,7 @@ class SQLEDITABLE(EDITABLE):
     def table_row_as_dict(self, record):
         row = self.table_set(record).select().first()
         if row:
-            return Record(row.as_dict(), self.header)
+            return Record(row.as_dict(custom_types=DIV), self.header)
         else:
             return None
             

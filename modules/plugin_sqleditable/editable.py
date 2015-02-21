@@ -1465,7 +1465,7 @@ class SQLEDITABLE(EDITABLE):
         return value, None
 
     def record_validate(self, record, rowno, editable=None):
-        def set_error(error, field):
+        def set_error(error, field=None):
             self.set_error_class(editable, rowno, field)
             if not error in self.errors:
                 self.errors.append(error)
@@ -1488,7 +1488,11 @@ class SQLEDITABLE(EDITABLE):
             call_as_list(self.onvalidation, form)
             if form.errors:
                 for e in form.errors:
-                    set_error(form.errors[e], e)
+                    if record.has_field(e):
+                        set_error(form.errors[e], e)
+                    else:
+                        set_error(form.errors[e])
+                        break
                 return False
             else:
                 for f in form.vars:

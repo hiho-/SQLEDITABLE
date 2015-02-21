@@ -1483,6 +1483,8 @@ class SQLEDITABLE(EDITABLE):
             form.errors = Storage()
             for f,v in record.real():
                 form.vars[f.name] = v
+            form.new = True if record.has_field(NEWRECORD_FLAG_FIELD) else False
+            form.delete = True if record.has_field(DELETE_FLAG_FIELD) else False
             call_as_list(self.onvalidation, form)
             if form.errors:
                 for e in form.errors:
@@ -1781,8 +1783,9 @@ class SQLEDITABLE(EDITABLE):
 
             if recordhash_status is True:
                 if rec.has_field(DELETE_FLAG_FIELD):
-                    status = db_delete(rec, r)
-                    record_cud = True
+                    if self.record_validate(rec, r):
+                        status = db_delete(rec, r)
+                        record_cud = True
                 else:
                     if self.validate_all or self.record_validate(rec, r):
                         if rec.has_field(NEWRECORD_FLAG_FIELD):

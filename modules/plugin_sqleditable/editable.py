@@ -151,7 +151,7 @@ class Header(object):
 
     def writable(self):
         for f in self.fields:
-            if self.__getattr__(f).writable is True:
+            if self.__getattr__(f).readable is True and self.__getattr__(f).writable is True:
                 yield self.__getattr__(f)
 
     def virtual(self):

@@ -1362,6 +1362,10 @@ class SQLEDITABLE(EDITABLE):
                     h['inset'] = {'multiple': validator.multiple,
                                   'zero': validator.zero,
                                   'items': validator.options()}
+                elif 'IS_IN_DB' in s:
+                    h['inset'] = {'multiple': validator.multiple,
+                                  'zero': validator.zero,
+                                  'items': validator.options()}
             return h
         
         table = self.table

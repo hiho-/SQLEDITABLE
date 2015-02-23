@@ -47,7 +47,6 @@ LINENO_LABEL                    = '#'
 DELETABLE_LABEL                 = 'Del'
 MSG_PROCESS_DIALOG              = 'in process'
 DATE_FORMAT                     = 'yyyy-mm-dd'
-SELECTBOX_DEFALUT_LABEL         = '---'
 
 NEWRECORD_FLAG_FIELD            = '__newrecord__'
 DELETE_FLAG_FIELD               = '__delete__'
@@ -302,7 +301,8 @@ class EDITABLE(FORM):
                                                                 default='string'
              - 'range': [minimum, maximum] (range of value)
              - 'length': [minimum, maximum] (size of value)
-             - 'inset':{'multiple':True/False, 'zero': value, 'theset':[value1,value2,.......]}
+             - 'inset':{'multiple':True/False, 'zero': value, 
+                           'items':[(value1,label1),(value2,label2),....]}
              - 'readable': True/False                           default=True
              - 'writable': True/False                           default=True
              - 'default': field value                           default=0 or ''
@@ -647,14 +647,8 @@ class EDITABLE(FORM):
             else:
                 v = value
             text = DIV(v, _style='display:none;',
-                       _id=CELL_ID_FORMAT % dict(field=id, row=rowno))
-            opt = [OPTION(SELECTBOX_DEFALUT_LABEL, _value='')] \
-                                                        if not multiple else []
-            if field.inset['labels']:
-                opt += [OPTION(l, _value=v) for v, l in \
-                        map(None, field.inset['theset'], field.inset['labels'])]
-            else:
-                opt += field.inset['theset']
+                       _id=CELL_ID_FORMAT % dict(field=id, row=rowno))            
+            opt = [OPTION(l, _value=v) for v, l in field.inset['items']]
                 
             select = SELECT(
                     opt,
@@ -1366,9 +1360,8 @@ class SQLEDITABLE(EDITABLE):
                     h['length'] = [validator.minsize, validator.maxsize]
                 elif 'IS_IN_SET' in s:
                     h['inset'] = {'multiple': validator.multiple,
-                                    'zero': validator.zero,
-                                    'theset': validator.theset,
-                                    'labels': validator.labels}
+                                  'zero': validator.zero,
+                                  'items': validator.options()}
             return h
         
         table = self.table
@@ -1437,8 +1430,7 @@ class SQLEDITABLE(EDITABLE):
                     h['readable'] = table[f].readable
                 if table[f].default is None:
                     if 'inset' in h:
-                        if 'zero' in h['inset'] and h['inset']['zero']:
-                            h['default'] = h['inset']['zero']
+                        h['default'] = h['inset']['zero']
                     elif h['type'] == 'boolean':
                         h['default'] = False
                     else:

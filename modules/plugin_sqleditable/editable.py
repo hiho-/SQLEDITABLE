@@ -1235,14 +1235,20 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
             r += 1
         return records, editable
 
-    def as_dict(self):
+    def as_dict(self, **kwargs):
         if self.editable:
             self.editable = self.refresh_editable(self.editable)
             return self.editable
         else:
             editable = self.build_editable()
-            return {'editable':DIV(editable[0],editable[2]),
-                    'button': editable[1], 'script': editable[3]}
+            editable = {'editable':DIV(editable[0],editable[2]), 'button': editable[1], 
+                                                                        'script': editable[3]}
+            for k in kwargs:
+                v = kwargs[k]
+                if callable(v):
+                    v = v()
+                editable[k] = v
+            return editable
 
     def xml(self):
         if self.editable:

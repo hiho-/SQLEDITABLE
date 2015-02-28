@@ -18,7 +18,7 @@ TABLEHASH_STRING                = '_tablehash[%s]'
 FORMKEY_ID                      = 'formkey'
 FORMNAME_ID                     = 'formname'
 EDITABLE_ID                     = 'editable'
-AJAX_BUTTON_ID                  = 'ajax_btn'
+AJAX_BUTTON_CLASS                  = 'ajax_btn'
 ID_FORMAT                       = '%(row)d_%(field)s'
 CELL_ID_FORMAT                  = 'cell_' + ID_FORMAT +'_'
 PARENT_ID_FORMAT                = 'parent_' + ID_FORMAT +'_'
@@ -343,9 +343,9 @@ class EDITABLE(FORM):
             self.deleteable_label = current.T(DELETABLE_LABEL)
             self.maxrow = maxrow
 
-            self.ajax_button_id = AJAX_BUTTON_ID
+            self.ajax_button_class = AJAX_BUTTON_CLASS
             self.ajax_button_value = current.T(DEFAULT_BUTTON_VALUE)
-            self.ajax_button_class = 'btn btn-primary btn-lg'
+            self.ajax_button_design_class = 'btn btn-primary btn-lg'
             self.ajax_button_style = 'padding:10px 20px'
 
             self.touch_device = kwargs.get('touch_device', 'Auto')
@@ -855,7 +855,7 @@ class EDITABLE(FORM):
              
         ajax    = \
 """
-jQuery('#%(ajax_button_id)s').on('click', function () {
+jQuery('.%(ajax_button_class)s').on('click', function () {
     jQuery.ajax({
         url: '%(url)s',
         type: 'POST',
@@ -892,7 +892,7 @@ jQuery('#%(ajax_button_id)s').on('click', function () {
 });
 """ % dict( url=self.url, 
             editable_id=self.editable_id, 
-            ajax_button_id=self.ajax_button_id, 
+            ajax_button_class=self.ajax_button_class, 
             formkey_id=self.formkey_id, 
             formname_id=self.formname_id, 
             msg_success=self.msg_success_class, 
@@ -1039,8 +1039,9 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
         if self.table_hash_available:
             self.generate_tablehash(formkey)
         # button
-        btn = self.add_button(self.ajax_button_id, self.ajax_button_value,
-                               self.ajax_button_class, self.ajax_button_style)
+        btn = self.add_button(None, self.ajax_button_value,
+                               self.ajax_button_class+' '+self.ajax_button_design_class,
+                               self.ajax_button_style)
         # js
         script = self.build_js()
         # process dialog

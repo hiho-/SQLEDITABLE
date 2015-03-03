@@ -222,7 +222,10 @@ class Record(object):
 
     def __value(self, f):
         if f.name in self.record:
-            value = self.record[f.name] 
+            if f.method and self.record[f.name]:
+                value = self.record[f.name](f.argument()) if f.argument else self.record[f.name]()
+            else: 
+                value = self.record[f.name] 
             if value == '':
                 return value
             if f.type == 'integer':
@@ -306,6 +309,9 @@ class EDITABLE(FORM):
              - 'writable': True/False                           default=True
              - 'default': field value                           default=0 or ''
              - 'virtual': True/False                            default=False
+             - 'argument': callable object for Field.Method
+
+               'method': reserved keyword for Field.Method. (automatic use)
         
         record : dict of one record
          {'field1':value1, 'field1':value2, ....., '__rechash__':hash}
@@ -1334,6 +1340,7 @@ class SQLEDITABLE(EDITABLE):
         self.showid = showid
         self.editid = editid
         self.update_display_record = update_display_record
+        self.custom_types = DIV
 
         EDITABLE.__init__(self, record, header, maxrow, lineno, url, 
                           validate_js, vertical, deletable, oninit, **kwargs)
@@ -1377,13 +1384,19 @@ class SQLEDITABLE(EDITABLE):
         def check_header_options(options):
             field = options['field']
 
-            if not(field in table) or isinstance(table[field], (Field.Virtual)):
+            if not(field in table) or isinstance(table[field], (Field.Virtual, Field.Method)):
                 options['type'] = 'string'
                 options['writable'] = False
                 options['readable'] = True
                 options['default'] = ''
                 options['label'] = ''
                 options['virtual'] = True
+                if isinstance(table[field], Field.Method):
+                    if 'argument' in options and not callable(options['argument']):
+                        raise TypeError('"argument" value mast be callable in "header" parameter.')
+                    from gluon.dal import VirtualCommand
+                    options['method'] = True
+                    self.custom_types = (DIV, VirtualCommand)
                 return
 
             if not any(k in options for k in ('range', 'length', 'inset')):
@@ -1547,7 +1560,7 @@ class SQLEDITABLE(EDITABLE):
     def table_row_as_dict(self, record):
         row = self.table_set(record).select().first()
         if row:
-            return Record(row.as_dict(custom_types=DIV), self.header)
+            return Record(row.as_dict(custom_types=self.custom_types), self.header)
         else:
             return None
             
@@ -1621,7 +1634,7 @@ class SQLEDITABLE(EDITABLE):
         if not record:
             limit = (0, self.maxrow) if self.maxrow else None
             record_data = self.table._db(self.table).select(limitby=limit)\
-                                                    .as_list(custom_types=DIV)
+                                                    .as_list(custom_types=self.custom_types)
             record_data = RecordArray(record_data, self.header)
             if self.record_hash_available:
                 for rec in record_data:

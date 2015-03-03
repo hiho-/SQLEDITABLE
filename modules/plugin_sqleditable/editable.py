@@ -1761,9 +1761,11 @@ class SQLEDITABLE(EDITABLE):
             els = self.pick_element(self.editable, rowno, mode='td-all')
             for el in els:
                 el.add_class(NO_EDIT_CLASS)
-                for child in ['input', 'select']:
+                for child in ['input', 'select', 'a', 'button']:
                     child_el = el.element(child)
                     if child_el:
+                        if child == 'a':
+                            child_el['_href'] = '#'
                         child_el['_disabled'] = 'disabled' 
 
             if self.record_hash_available:

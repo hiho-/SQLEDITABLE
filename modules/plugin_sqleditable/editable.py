@@ -1394,7 +1394,10 @@ class SQLEDITABLE(EDITABLE):
                 if isinstance(table[field], Field.Method):
                     if 'argument' in options and not callable(options['argument']):
                         raise TypeError('"argument" value mast be callable in "header" parameter.')
-                    from gluon.dal import VirtualCommand
+                    try:
+                        from pydal.objects import VirtualCommand
+                    except ImportError:
+                        from gluon.dal import VirtualCommand
                     options['method'] = True
                     self.custom_types = (DIV, VirtualCommand)
                 return

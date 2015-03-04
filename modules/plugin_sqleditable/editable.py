@@ -648,10 +648,12 @@ class EDITABLE(FORM):
             if value is None:
                 value = default                
             if isinstance(value, (list,tuple)):
-                v = ','.join(value)
+                val = ''
+                for v in value:
+                    val += (',' if val else '') + str(v)
             else:
-                v = value
-            text = DIV(v, _style='display:none;',
+                val = value
+            text = DIV(val, _style='display:none;',
                        _id=CELL_ID_FORMAT % dict(field=id, row=rowno))            
             opt = [OPTION(l, _value=v) for v, l in field.inset['items']]
                 
@@ -1365,6 +1367,9 @@ class SQLEDITABLE(EDITABLE):
                 requires = [requires]
             for validator in requires:
                 s = str(validator)
+                if 'IS_EMPTY_OR' in s:
+                    validator = validator.other
+                    s = str(validator)
                 if 'IS_DECIMAL_IN_RANGE' in s or \
                     'IS_FLOAT_IN_RANGE' in s or \
                      'IS_INT_IN_RANGE' in s:

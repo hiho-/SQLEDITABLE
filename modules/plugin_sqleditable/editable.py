@@ -1632,7 +1632,10 @@ class SQLEDITABLE(EDITABLE):
             if not fields:
                 return record_data
 
-            from gluon.dal import bar_decode_string
+            try:
+                from pydal.helpers.methods import bar_decode_string
+            except ImportError:
+                from gluon.dal import bar_decode_string
             for record in record_data:
                 for field in fields:
                     if '|' in record[field]:

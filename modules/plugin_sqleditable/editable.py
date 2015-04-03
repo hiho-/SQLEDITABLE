@@ -1399,7 +1399,7 @@ class SQLEDITABLE(EDITABLE):
                 options['default'] = ''
                 options['label'] = ''
                 options['virtual'] = True
-                if isinstance(table[field], Field.Method):
+                if field in table and isinstance(table[field], Field.Method):
                     if 'argument' in options and not callable(options['argument']):
                         raise TypeError('"argument" value mast be callable in "header" parameter.')
                     try:

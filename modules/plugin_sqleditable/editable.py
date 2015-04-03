@@ -94,7 +94,7 @@ class FieldInfo(object):
 
     def __repr__(self):
       return str(self.field)
-  
+
     def is_key(self):
         if self.field['field'] in self.key_fields:
             return True
@@ -132,7 +132,7 @@ class Header(object):
             return FieldInfo(self.header[self.fields.index(field)], self.key_fields)
         else:
             return None
-    
+
     def __getitem__(self, field):
         return self.__getattr__(field)
 
@@ -188,7 +188,7 @@ class Record(object):
                 return None
         f = self.header[field]
         return self.__value(f)
-    
+
     def __getitem__(self, field):
         return self.__getattr__(field)
 
@@ -197,10 +197,10 @@ class Record(object):
 
     def __setitem__(self, field, value):
         self.record[field] = value
-        
+
     def __delitem__(self, field):
         del self.record[field]
-        
+
     def __repr__(self):
       return str(self.record)
 
@@ -224,8 +224,8 @@ class Record(object):
         if f.name in self.record:
             if f.method and self.record[f.name]:
                 value = self.record[f.name](f.argument()) if f.argument else self.record[f.name]()
-            else: 
-                value = self.record[f.name] 
+            else:
+                value = self.record[f.name]
             if value == '':
                 return value
             if f.type == 'integer':
@@ -248,7 +248,7 @@ class Record(object):
                     while range(3-len(ls)):
                         ls.append('00')
                     return ':'.join(ls)
-            return value 
+            return value
         return None
 
     def key_value(self):
@@ -263,7 +263,7 @@ class Record(object):
 
     def has_field(self, field):
         return field in self.record
-    
+
     def as_dict(self):
         return self.record
 
@@ -292,18 +292,18 @@ class RecordArray(object):
 class EDITABLE(FORM):
     '''
         header: list of header info.
-         [{'field': 'name1', 'label': 'test', 'type':'number', 'readable': True, 
+         [{'field': 'name1', 'label': 'test', 'type':'number', 'readable': True,
                     'writable':True}, {'field': 'name2'}, {..}]
 
          - field: field name
-         
+
              option dict
              - 'label': field label
-             - 'type': integer/number/string/boolean/date/time 
+             - 'type': integer/number/string/boolean/date/time
                                                                 default='string'
              - 'range': [minimum, maximum] (range of value)
              - 'length': [minimum, maximum] (size of value)
-             - 'inset':{'multiple':True/False, 'zero': value, 
+             - 'inset':{'multiple':True/False, 'zero': value,
                            'items':[(value1,label1),(value2,label2),....]}
              - 'readable': True/False                           default=True
              - 'writable': True/False                           default=True
@@ -312,7 +312,7 @@ class EDITABLE(FORM):
              - 'argument': callable object for Field.Method
 
                'method': reserved keyword for Field.Method. (automatic use)
-        
+
         record : dict of one record
          {'field1':value1, 'field1':value2, ....., '__rechash__':hash}
 
@@ -321,7 +321,7 @@ class EDITABLE(FORM):
     '''
 
     def __init__(self, record, header, maxrow=None, lineno=True,
-                 url=None, validate_js=True, vertical=True, deletable=False, 
+                 url=None, validate_js=True, vertical=True, deletable=False,
                  oninit=None, **kwargs):
 
         self.editable_id = EDITABLE_ID
@@ -329,17 +329,17 @@ class EDITABLE(FORM):
         if not self.is_ajax():
             if record and callable(record):
                 record = record()
-                
+
             if record and isinstance(record, (list, tuple)) and \
                                                 isinstance(record[0] , dict):
-                self.record = RecordArrey(record, header) 
+                self.record = RecordArrey(record, header)
             else:
                 self.record = record
-            
-            self.url = url if url else URL() 
+
+            self.url = url if url else URL()
             self.validate_js = validate_js
             # self.language = self.set_language()
-            
+
             self.formname_id = FORMNAME_ID
             self.table_class = 'table table-bordered'
 
@@ -350,8 +350,8 @@ class EDITABLE(FORM):
 
             self.ajax_button_class = AJAX_BUTTON_CLASS
             self.ajax_button_value = current.T(DEFAULT_BUTTON_VALUE)
-            self.ajax_button_design_class = 'btn btn-primary btn-lg'
-            self.ajax_button_style = 'padding:10px 20px'
+            self.ajax_button_design_class = 'btn btn-primary'
+            self.ajax_button_style = 'padding:8px 15px;margin: 10px;'
 
             self.touch_device = kwargs.get('touch_device', 'Auto')
             if self.touch_device == 'Auto':
@@ -365,15 +365,15 @@ class EDITABLE(FORM):
             self.field_datetime_class = class_prefix_mobile+FIELD_DATETIME_CLASS
 
 
-            self.msg_success_class = MSG_SUCCESS_CLASS 
+            self.msg_success_class = MSG_SUCCESS_CLASS
             self.msg_failure_class = MSG_FAILURE_CLASS
             self.msg_process_dialog = current.T(MSG_PROCESS_DIALOG, lazy=False)
             self.process_dialog_class = PROCESS_DIALOG_CLASS
             self.vertical = vertical
-            
+
             if oninit and callable(oninit):
                 oninit(self)
-            
+
         if hasattr(self, 'table') and self.table and \
                                                 hasattr(self, 'define_header'):
             # key list
@@ -397,11 +397,11 @@ class EDITABLE(FORM):
         self.cell_error_class=CELL_ERROR_CLASS
         self.table_hash_available = TABLE_HASH_AVAILABLE
         self.record_hash_available = RECORD_HASH_AVAILABLE
-        self.hash_salt_length = HASH_SALT_LENGTH 
+        self.hash_salt_length = HASH_SALT_LENGTH
         self.hash_salt = None
         self.hash_table = None
         self.editable = None
-        self.validate_all = False 
+        self.validate_all = False
         self.errors = None
         self.o_record = None
         self.next = None
@@ -409,20 +409,20 @@ class EDITABLE(FORM):
     @staticmethod
     def init():
         def extract(func):
-            r=func() 
+            r=func()
             if request.ajax:
                 if isinstance(r, dict):
                     for v in r.values():
                         if isinstance(v, EDITABLE):
                             return v
             return r
-        
+
         from gluon import current
         response = current.response
         request = current.request
         response.files.append(URL('static/plugin_sqleditable/js',
                                                     'mindmup-editabletable.js'))
-        response._caller=extract         
+        response._caller=extract
 
     def check_salt(self, salt, base64=False):
         if self.hash_salt_length <= 0:
@@ -441,7 +441,7 @@ class EDITABLE(FORM):
             return salt.encode('base64')
         else:
             return salt
-        
+
     def generate_hash(self, text, use_salt=True):
         if use_salt is False:
             salt = ''
@@ -487,7 +487,7 @@ class EDITABLE(FORM):
                                         [[formkey, [tablehash, hash_salt]]]
             return tablehash
         else:
-            return None 
+            return None
 
     def generate_formkey(self):
         if self.session:
@@ -497,11 +497,11 @@ class EDITABLE(FORM):
                                                                     [formkey]
             return formkey
         else:
-            return None 
+            return None
 
     def set_formkey(self, formkey):
         hidden  = [INPUT(_type='hidden', _id=self.formkey_id, _value=formkey),
-                   INPUT(_type='hidden', _id=self.formname_id, 
+                   INPUT(_type='hidden', _id=self.formname_id,
                                                         _value=self.formname)]
         return DIV((hidden), _style="display:none;")
 
@@ -521,7 +521,7 @@ class EDITABLE(FORM):
             el = self.pick_element(editable, r, special='key')
             if el:
                 value = el[KEY_ID_TAG_ATTR]
-                hash = el[RECORD_HASH_TAG_ATTR] 
+                hash = el[RECORD_HASH_TAG_ATTR]
                 if value:
                     keys.append(value.decode('base64'))
                 if hash:
@@ -551,7 +551,7 @@ class EDITABLE(FORM):
                 return False
         else:
             return False
-        
+
     def check_formkey(self, formkey):
         if self.session:
             keyname =  FORMKEY_STRING % self.formname
@@ -574,12 +574,12 @@ class EDITABLE(FORM):
         if self.generate_inputhash(record) == record[INPUT_HASH_FIELD]:
             return True
         return False
-    
+
     def refresh_editable(self, editable):
         if self.next and not self.errors:
             script = 'location.href = "%s"' % self.next
             return DIV(SCRIPT(script, _type='text/javascript'), editable)
-        
+
         if not isinstance(editable, DIV):
             editable = TAG(editable)
         # select
@@ -600,7 +600,7 @@ class EDITABLE(FORM):
                         option['_selected'] = True
                     else:
                         option['_selected'] = False
-                
+
         # checkbox
         checkboxs = editable.elements(_type='checkbox')
         for checkbox in checkboxs:
@@ -615,7 +615,7 @@ class EDITABLE(FORM):
         if self.errors:
             message = ''
             for error in self.errors:
-                message = CAT(message, DIV(error, _id=self.msg_error_id, 
+                message = CAT(message, DIV(error, _id=self.msg_error_id,
                                                         _class=MSG_ERROR_CLASS))
             editable = DIV(message, editable)
         return editable
@@ -625,7 +625,7 @@ class EDITABLE(FORM):
         if self.vertical:
             if self.deletable:
                 head.append(TH(self.deleteable_label, _class=DELETABLE_CLASS))
-                
+
             for f in self.header.readable():
                 head.append(TH(f.label))
         else:
@@ -640,13 +640,13 @@ class EDITABLE(FORM):
     def __field_tag(self, field, value, rowno, p_class, p_style, p_disabled):
         id = field.name
         type = field.type
-        
+
         if field.has_attr('inset'):
             default = field.inset['zero'] if 'zero' in field.inset else ''
             multiple = field.inset['multiple'] if 'multiple' in field.inset \
                                                                     else False
             if value is None:
-                value = default                
+                value = default
             if isinstance(value, (list,tuple)):
                 val = ''
                 for v in value:
@@ -654,12 +654,12 @@ class EDITABLE(FORM):
             else:
                 val = value
             text = DIV(val, _style='display:none;',
-                       _id=CELL_ID_FORMAT % dict(field=id, row=rowno))            
+                       _id=CELL_ID_FORMAT % dict(field=id, row=rowno))
             opt = [OPTION(l, _value=v) for v, l in field.inset['items']]
-                
+
             select = SELECT(
                     opt,
-                    value= value, 
+                    value= value,
                     _disabled=p_disabled,
                     _multiple= multiple,
                     _style='width:100%;')
@@ -667,7 +667,7 @@ class EDITABLE(FORM):
             p_class.append(FIELD_SELECT_CLASS)
             p_class.append('parent')
             id_type = PARENT_ID_FORMAT
-            
+
         elif type == 'boolean':
             value = INPUT(
                     _type='checkbox',
@@ -681,15 +681,15 @@ class EDITABLE(FORM):
         elif type == 'date':
             p_class.append(self.field_date_class)
             id_type = CELL_ID_FORMAT
-            
+
         elif type == 'time':
             p_class.append(self.field_time_class)
             id_type = CELL_ID_FORMAT
-            
+
         elif type == 'datetime':
             p_class.append(self.field_datetime_class)
             id_type = CELL_ID_FORMAT
-            
+
         else:
             id_type = CELL_ID_FORMAT
 
@@ -700,13 +700,13 @@ class EDITABLE(FORM):
                 _disabled=p_disabled, _name=type,
                 _id=id_type % dict(field=id, row=rowno))
         return td
-    
+
     def __deletable_tag(self, rowno):
         value = INPUT(_type='checkbox', _checked=False, _value='off',
                       _id=DELETABLE_ID_FORMAT % dict(row=rowno))
-        td = TD(value, _class=DELETABLE_CLASS + ' parent') 
+        td = TD(value, _class=DELETABLE_CLASS + ' parent')
         return td
-        
+
     def __key_tag(self, record, rowno):
         parm = {}
         if rowno is not None:
@@ -716,15 +716,16 @@ class EDITABLE(FORM):
         else:
             id = False
         if record:
-            if record.has_field(RECORD_HASH_FIELD): 
+            if record.has_field(RECORD_HASH_FIELD):
                 parm[RECORD_HASH_TAG_ATTR] = record[RECORD_HASH_FIELD]
-            if record.has_field(INPUT_HASH_FIELD): 
+            if record.has_field(INPUT_HASH_FIELD):
                 parm[INPUT_HASH_TAG_ATTR] = record[INPUT_HASH_FIELD]
-        td = TD(_class=NO_EDIT_CLASS, _id = id, _style="display:none;", **parm) 
+        td = TD(_class=NO_EDIT_CLASS, _id = id, _style="display:none;", **parm)
         return td
-        
+
+    @property
     def build_editable_body(self):
-                
+
         def newrecord():
             record = Record({}, self.header)
             record[NEWRECORD_FLAG_FIELD] = True
@@ -732,13 +733,13 @@ class EDITABLE(FORM):
                 record[f.name] = f.default
             record[INPUT_HASH_FIELD] = self.generate_inputhash(record)
             return record
-            
+
         def set_record(rowno):
             if rowno < len(self.record):
                 return self.record[rowno]
             else:
                 return new_record
-        
+
         maxrow = self.maxrow if self.maxrow else len(self.record)
         contents = []
 
@@ -778,13 +779,13 @@ class EDITABLE(FORM):
                 for r in xrange(maxrow):
                     line.append(self.__deletable_tag(r))
                 contents.append(TR(line))
-                                
+
             first = True
-            for f in self.header.all():  
+            for f in self.header.all():
                 line = []
                 if f.readable:
                     line.append(TH(f.label))
-                     
+
                 for r in xrange(maxrow):
                     record = set_record(r)
                     p_class = []
@@ -801,12 +802,12 @@ class EDITABLE(FORM):
                         first = False
 
                     value = record[f.name] if not record[f.name] is None else ''
-                    line.append(self.__field_tag(f, value, r, p_class, p_style, 
+                    line.append(self.__field_tag(f, value, r, p_class, p_style,
                                                                     p_disabled))
                 contents.append(TR(line))
 
             line = []
-            line.append(self.__key_tag(None, None))     # title 
+            line.append(self.__key_tag(None, None))     # title
             for r in xrange(maxrow):
                 record = set_record(r)
                 line.append(self.__key_tag(record, r))
@@ -815,33 +816,35 @@ class EDITABLE(FORM):
         return TBODY(contents)
 
     def process_dialog(self, message=''):
-        if isinstance(message, (str, unicode)):  
-            dialog = DIV(DIV(message, _class='modal-header'),
-                         DIV(DIV(DIV(_class='bar', _style='width: 100%;'),
+        if isinstance(message, (str, unicode)):
+            dialog = DIV(DIV(DIV(DIV(message, _class='modal-header'),
+                        DIV(DIV(DIV(_class='progress-bar', _role='progressbar', _style='width:100%',
+                            **{'_asria-valuenow':'100', '_aria-valuemin':'0', '_aria-valuemax':'100'}),
                                  _class='progress progress-striped active'),
                              _class='modal-body'),
-                        _class='%s modal hide fade' % self.process_dialog_class)
+                        _class='modal-content'), _class='modal-dialog'),
+                    _class='%s modal fade' % self.process_dialog_class)
         else:
             dialog = message
         return dialog
 
     def add_button(self, id, value, _class, _style):
-        if isinstance(value, (str, unicode)):
+        import gluon.languages
+        if isinstance(value, (str, unicode, gluon.languages.lazyT)):
             text = value
         elif value is None:
             text = AJAX_BUTTON_VALUE
         else:
             text = None
         if text:
-            value = SPAN(I(_type='button', _class='icon-ok icon-white', 
-                           _style='margin-right: 5px;'), text)
-
-        return BUTTON(value, _type='button', _class=_class, _style=_style, 
+            value = SPAN(I(_type='button', _class='glyphicon glyphicon-ok',
+                           _style='margin-right: 5px;'), text, _style='font-size: 1em;')
+        return BUTTON(value, _type='button', _class=_class, _style=_style,
                       _id=id)
 
     def build_js(self):
         """
-        build javascript for field check and ajax.  
+        build javascript for field check and ajax.
         """
         # js snipped
         onload  = "jQuery(document).ready(function () {%s});\n"
@@ -859,7 +862,7 @@ class EDITABLE(FORM):
              'integer':"value == parseInt(value) || value == ''",
              'number' :"(!isNaN(parseFloat(value)) && isFinite(value)) || value==''"}
         focus  = "jQuery('.%s').focus();" % FIRST_CELL_CLASS
-             
+
         ajax    = \
 """
 jQuery('.%(ajax_button_class)s').on('click', function () {
@@ -897,17 +900,17 @@ jQuery('.%(ajax_button_class)s').on('click', function () {
         jQuery('.%(first_cell)s').focus();
     });
 });
-""" % dict( url=self.url, 
-            editable_id=self.editable_id, 
-            ajax_button_class=self.ajax_button_class, 
-            formkey_id=self.formkey_id, 
-            formname_id=self.formname_id, 
-            msg_success=self.msg_success_class, 
+""" % dict( url=self.url,
+            editable_id=self.editable_id,
+            ajax_button_class=self.ajax_button_class,
+            formkey_id=self.formkey_id,
+            formname_id=self.formname_id,
+            msg_success=self.msg_success_class,
             msg_failure=self.msg_failure_class,
-            msg_error_id=self.msg_error_id, 
+            msg_error_id=self.msg_error_id,
             process_dialog=self.process_dialog_class,
             first_cell = FIRST_CELL_CLASS)
-        
+
         keydown_js =\
 """
 jQuery(document).on('keydown', 'td:not(.%(noedit)s,.%(deletable)s)', function (e) {
@@ -931,7 +934,7 @@ jQuery(document).on('keydown', 'select', function (e) {
     }
 });
 """ % dict(noedit=NO_EDIT_CLASS, deletable=DELETABLE_CLASS)
-        
+
         checkbox_js =\
 """
 jQuery(document).on('click', ':checkbox', function (e) {
@@ -945,15 +948,15 @@ jQuery(document).on('click', ':checkbox', function (e) {
 jQuery(document).on('click', 'td:not(.%(noedit)s):has(:checkbox)', function(e){
     jQuery(this).children(':checkbox').trigger('click');
 });
-""" % dict(noedit=NO_EDIT_CLASS)  
-            
+""" % dict(noedit=NO_EDIT_CLASS)
+
         select_js =\
 """
 jQuery(document).on('change', 'td:not(.%(noedit)s)>select', function () {
     jQuery(this).next('div').text(jQuery(this).val());
 });
-""" % dict(noedit=NO_EDIT_CLASS)  
-     
+""" % dict(noedit=NO_EDIT_CLASS)
+
         date_time_js = \
 """
 jQuery(document).on('blur', 'input.%(field_class)s' , function (e) {
@@ -980,7 +983,7 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
                 if f.has_attr('range'):
                     cond.append(condition['range'] % tuple(f.range))
                 if f.has_attr('length'):
-                    cond.append(condition['length'] % tuple(f.length)) 
+                    cond.append(condition['length'] % tuple(f.length))
                 if f.type == 'integer':
                     cond.append(condition['integer'])
                 elif f.type == 'number':
@@ -1010,11 +1013,11 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
             if date is False and (f.type == 'date' and f.writable==True):
                 script += date_time_js % dict(field_class=self.field_date_class)
                 date = True
-            if time is False and (f.type == 'time' and f.writable==True): 
+            if time is False and (f.type == 'time' and f.writable==True):
                 script += date_time_js % dict(field_class=self.field_time_class)
                 time = True
             if datetime is False and \
-                                    (f.type == 'datetime' and f.writable==True): 
+                                    (f.type == 'datetime' and f.writable==True):
                 script += date_time_js % \
                                     dict(field_class=self.field_datetime_class)
                 datetime = True
@@ -1033,9 +1036,9 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
     def build_editable(self):
         # editable
         head = self.build_editable_header()
-        body = self.build_editable_body()
+        body = self.build_editable_body
         contents = [head, body] if head else body
-        editable = DIV(TABLE(contents, _class=self.table_class), 
+        editable = DIV(TABLE(contents, _class=self.table_class),
                     _id=self.editable_id)
         # formkey/formname
         formkey = self.generate_formkey()
@@ -1053,10 +1056,10 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
         script = self.build_js()
         # process dialog
         dialog = self.process_dialog(self.msg_process_dialog)
-        
+
         return [editable, btn, dialog, SCRIPT(script, _type='text/javascript')]
 
-    def pick_element(self, editable, rowno, field=None, mode=None, 
+    def pick_element(self, editable, rowno, field=None, mode=None,
                                                                 special=None):
         '''
         pick the element of editable.
@@ -1067,9 +1070,9 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
             mode     : None: pick the field tag.
                        'td': pick the parent td-tag (the case of nested).
                        'td-all': pick all field td-tags of record.
-            special  : special fields. 
+            special  : special fields.
                        'key':key
-                       'deletable':deletable flag 
+                       'deletable':deletable flag
         '''
         def field_element(field, mode=None):
             id = CELL_ID_FORMAT % dict(field=field, row=rowno)
@@ -1086,7 +1089,7 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
             if mode == 'td':
                 return el.parent
             return el
-            
+
         if mode == 'td-all':
             td_tags = []
             td = deletable_element('td')
@@ -1104,8 +1107,8 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
                 return deletable_element()
             else:
                 return field_element(field, mode=mode)
-                
-    def update_field_element(self, editable, rowno, value, field=None, 
+
+    def update_field_element(self, editable, rowno, value, field=None,
                                                                 special=None):
         # key value & recordhash
         if special == 'key':
@@ -1127,11 +1130,11 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
             elif len(el) > 0:
                 el[0] = value
             elif hasattr(el,'tag') and el.tag=='td':
-                td = TD(value, _class=el['_class'], _id=el['_id'], 
+                td = TD(value, _class=el['_class'], _id=el['_id'],
                                 _name=el['_name'], _tabindex=el['_tabindex'],
                                 _style=el['_style'])
                 editable.element(_id=el['_id'], replace=td)
-    
+
     def set_error_class(self, editable, rowno, field=None):
         if field:
             el = self.pick_element(editable, rowno, field, mode='td')
@@ -1143,7 +1146,7 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
 
     def readout_editable(self, editable, table=None):
         '''
-        readout editable & check error (if table exsit) 
+        readout editable & check error (if table exsit)
         '''
         def readout_element(rowno, f=None, special=None):
             if special == 'key':
@@ -1180,7 +1183,7 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
             value,el = readout_element(rowno, special='key')
             if el is None:
                 return None
-            elif value: 
+            elif value:
                 if value[0]:
                     keys = zip(self.header.key(),value[0])
                     for k,v in keys:
@@ -1219,7 +1222,7 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
             return False
         elif not isinstance(editable, DIV):
             editable = TAG(editable)
-            
+
         # remove error message & error class
         editable.elements(_id=self.msg_error_id, replace=None)
         els = editable.elements('td.%s' % self.cell_error_class)
@@ -1249,7 +1252,7 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
             return self.editable
         else:
             editable = self.build_editable()
-            editable = {'editable':DIV(editable[0],editable[2]), 'button': editable[1], 
+            editable = {'editable':DIV(editable[0],editable[2]), 'button': editable[1],
                                                                         'script': editable[3]}
             for k in kwargs:
                 v = kwargs[k]
@@ -1272,7 +1275,7 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
             return True
         else:
             return False
-    
+
     def is_touch_device(self):
         from gluon import current
         user_agent = current.request.user_agent()
@@ -1280,7 +1283,7 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
             return True
         else:
             return False
-    
+
     def set_language(self):
         from gluon import current
         request_vars = current.request.env
@@ -1296,9 +1299,9 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
         FORM.process(self, **kwargs)
         return self
 
-    def accepts(self, request_vars, session=None, formname=FORMNAME, 
+    def accepts(self, request_vars, session=None, formname=FORMNAME,
                 onvalidation=None, hideerror=False, **kwargs):
-                    
+
         if request_vars.__class__.__name__ == 'Request':
             request_vars = request_vars.post_vars
         self.request_vars = Storage()
@@ -1318,7 +1321,7 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
         elif not self.check_formkey(request_vars.formkey):
             status = False
         elif self.table_hash_available and \
-            not self.check_tablehash(request_vars.formkey, 
+            not self.check_tablehash(request_vars.formkey,
                                      request_vars[self.editable_id]):
             status = False
         if status and request_vars[self.editable_id]:
@@ -1331,20 +1334,20 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
             status = False
         self.accepted = status
         return status
-        
+
 class SQLEDITABLE(EDITABLE):
     def __init__(self, table, record=None, deletable=False, header=None,
                  maxrow=None, lineno=True,  url=None, showid=True, editid=False,
-                 validate_js=True, vertical=True, oninit=None, 
+                 validate_js=True, vertical=True, oninit=None,
                  update_display_record=False, **kwargs):
-                 
+
         self.table = table
         self.showid = showid
         self.editid = editid
         self.update_display_record = update_display_record
         self.custom_types = DIV
 
-        EDITABLE.__init__(self, record, header, maxrow, lineno, url, 
+        EDITABLE.__init__(self, record, header, maxrow, lineno, url,
                           validate_js, vertical, deletable, oninit, **kwargs)
 
         # record list
@@ -1353,8 +1356,8 @@ class SQLEDITABLE(EDITABLE):
                 self.record = self.db_read(self.record)
             elif self.record is None:
                 self.record = self.db_read(None)
-                
-    def define_header(self, fields=None, key_fields=None ,showid=True, 
+
+    def define_header(self, fields=None, key_fields=None ,showid=True,
                                                                 editid=False):
         '''
         define header list
@@ -1423,13 +1426,13 @@ class SQLEDITABLE(EDITABLE):
                     else:
                         options['type'] = 'number'
                 elif table[field].type == 'boolean':
-                    options['type'] = 'boolean'        
+                    options['type'] = 'boolean'
                 elif table[field].type == 'datetime':
-                    options['type'] = 'datetime'        
+                    options['type'] = 'datetime'
                 elif table[field].type == 'date':
-                    options['type'] = 'date'        
+                    options['type'] = 'date'
                 elif table[field].type == 'time':
-                    options['type'] = 'time'        
+                    options['type'] = 'time'
                 else:
                     options['type'] = 'string'
             if not 'writable' in options:
@@ -1439,7 +1442,7 @@ class SQLEDITABLE(EDITABLE):
                     options['writable'] = table[field].writable
             if not 'readable' in options:
                 if self.table[field].name in key_fields:
-                    options['readable'] = table[field].readable if showid else False 
+                    options['readable'] = table[field].readable if showid else False
                 else:
                     options['readable'] = table[field].readable
             if not 'default' in options:
@@ -1455,11 +1458,11 @@ class SQLEDITABLE(EDITABLE):
             if not 'label' in options:
                 options['label'] = table[field].label
             if not 'virtual' in options:
-                options['virtual'] = False 
-            return   
+                options['virtual'] = False
+            return
 
         table = self.table
-        
+
         if fields is None:
             fields = table.fields
         else:
@@ -1564,14 +1567,14 @@ class SQLEDITABLE(EDITABLE):
             cond = cond &(self.table[k.name] == v) if cond else \
                                                         self.table[k.name] == v
         return self.table._db(cond)
-        
+
     def table_row_as_dict(self, record):
         row = self.table_set(record).select().first()
         if row:
             return Record(row.as_dict(custom_types=self.custom_types), self.header)
         else:
             return None
-            
+
     def set_recordhash_error(self, rowno, changed=True):
         self.set_error_class(self.editable, rowno)
         from gluon import current
@@ -1588,17 +1591,17 @@ class SQLEDITABLE(EDITABLE):
         target
             'record'    : check for the record
             'table'     : check for the table (all records)
-        
+
         return value: True: matched recordhash
                       False: no matched recordhash
-                      'notexit': record is not exsit 
+                      'notexit': record is not exsit
                       'dummy': dummy record
         '''
         def compare_recordhash(record):
             if record.has_field(RECORD_HASH_FIELD) is False:
                 return False
             if record[RECORD_HASH_FIELD] == DUMMY_RECORD_HASH_VALUE:
-                return 'dummy' 
+                return 'dummy'
 
             db_record = self.table_row_as_dict(record)
             if db_record is None:
@@ -1622,7 +1625,7 @@ class SQLEDITABLE(EDITABLE):
                         return False
             return True
         return False
-    
+
     def db_read(self, record=None):
         def format_record_data(record_data):
             fields = []
@@ -1676,7 +1679,7 @@ class SQLEDITABLE(EDITABLE):
                         rec[RECORD_HASH_FIELD] = self.generate_recordhash(rec)
                     record_data.append(rec)
             return format_record_data(record_data)
-    
+
     def db_cud(self):
 
         def db_create(record, rowno):
@@ -1699,7 +1702,7 @@ class SQLEDITABLE(EDITABLE):
                 else:
                     key = record.key_list()[0]
                     record[key] = result
-            
+
             rec = self.table_row_as_dict(record)
             if rec:
                 value = {}
@@ -1710,20 +1713,20 @@ class SQLEDITABLE(EDITABLE):
                     value['record_hash'] = recordhash
                     record[RECORD_HASH_FIELD] = recordhash
                 value['input_hash'] = self.generate_inputhash(rec)
-                self.update_field_element(self.editable, rowno, value, 
+                self.update_field_element(self.editable, rowno, value,
                                                                 special='key')
                 del record[NEWRECORD_FLAG_FIELD]
 
                 for key in record.key_list():
-                    self.update_field_element(self.editable, rowno, 
+                    self.update_field_element(self.editable, rowno,
                                                                 rec[key], key)
                 if self.update_display_record:
                     for f in record.header.readable():
-                        self.update_field_element(self.editable, rowno, 
+                        self.update_field_element(self.editable, rowno,
                                                                 rec[f.name], f.name)
                 else:
                     for f in record.header.virtual():
-                        self.update_field_element(self.editable, rowno, 
+                        self.update_field_element(self.editable, rowno,
                                                                 rec[f.name], f.name)
             return result
 
@@ -1754,15 +1757,15 @@ class SQLEDITABLE(EDITABLE):
                         value['record_hash'] = recordhash
                         record[RECORD_HASH_FIELD] = recordhash
                     value['input_hash'] = self.generate_inputhash(rec)
-                    self.update_field_element(self.editable, rowno, value, 
+                    self.update_field_element(self.editable, rowno, value,
                                                             special='key')
                     if self.update_display_record:
                         for f in record.header.readable():
-                            self.update_field_element(self.editable, rowno, 
+                            self.update_field_element(self.editable, rowno,
                                                                     rec[f.name], f.name)
                     else:
                         for f in record.header.virtual():
-                            self.update_field_element(self.editable, rowno, 
+                            self.update_field_element(self.editable, rowno,
                                                                     rec[f.name], f.name)
                 return result
             else:
@@ -1790,16 +1793,16 @@ class SQLEDITABLE(EDITABLE):
                     if child_el:
                         if child == 'a':
                             child_el['_href'] = '#'
-                        child_el['_disabled'] = 'disabled' 
+                        child_el['_disabled'] = 'disabled'
 
             if self.record_hash_available:
                 value = {'record_hash':DUMMY_RECORD_HASH_VALUE, 'input_hash':''}
                 record[RECORD_HASH_FIELD] = DUMMY_RECORD_HASH_VALUE
-                self.update_field_element(self.editable, rowno, value, 
+                self.update_field_element(self.editable, rowno, value,
                                                                 special='key')
             return result
 
-        # check recordhash for not parcel_update and not record_hash_available 
+        # check recordhash for not parcel_update and not record_hash_available
         recordhash_status = False
         if self.record_hash_available:
             if self.parcel_update is False:
@@ -1808,7 +1811,7 @@ class SQLEDITABLE(EDITABLE):
                 recordhash_status = True
         else:
             recordhash_status = True
-        
+
         #create/update/delete
         status = True
         record_cud = False
@@ -1845,13 +1848,13 @@ class SQLEDITABLE(EDITABLE):
         if status and record_cud:
             self.table._db.commit()
         return bool(status)
-        
-    def accepts(self, request_vars,session=None, formname='tb_%(tablename)s', 
+
+    def accepts(self, request_vars,session=None, formname='tb_%(tablename)s',
                 parcel_update=True, onvalidation=None, hideerror=False,
                 **kwargs):
         if request_vars.__class__.__name__ == 'Request':
             request_vars = request_vars.post_vars
-               
+
         self.parcel_update = parcel_update
         formname = formname % dict(tablename=self.table._tablename)
         status = EDITABLE.accepts(self, request_vars, session, formname,
@@ -1865,5 +1868,3 @@ class SQLEDITABLE(EDITABLE):
             status = False
         self.accepted = status
         return status
-    
-        

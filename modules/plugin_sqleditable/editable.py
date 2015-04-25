@@ -665,7 +665,7 @@ class EDITABLE(FORM):
                     _multiple= multiple,
                     _class=FIELD_SELECT_BOX_CLASS,
                     _style='width:100%;')
-            value = [select, text]
+            value = [text, select]
             p_class.append(FIELD_SELECT_CLASS)
             p_class.append('parent')
             id_type = PARENT_ID_FORMAT
@@ -955,7 +955,7 @@ jQuery(document).on('click', 'td:not(.%(noedit)s):has(:checkbox)', function(e){
         select_js =\
 """
 jQuery(document).on('change', 'td:not(.%(noedit)s)>select', function () {
-    jQuery(this).next('div').text(jQuery(this).val());
+    jQuery(this).prev('div').text(jQuery(this).val());
 });
 """ % dict(noedit=NO_EDIT_CLASS)
 

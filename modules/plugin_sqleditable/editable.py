@@ -38,6 +38,7 @@ FIELD_DATE_CLASS                = 'date'
 FIELD_TIME_CLASS                = 'time'
 FIELD_DATETIME_CLASS            = 'datetime'
 FIELD_SELECT_CLASS              = 'select'
+FIELD_SELECT_BOX_CLASS          = 'selectpicker'
 NO_EDIT_CLASS                   = 'noedit'
 FIRST_CELL_CLASS                = 'first_cell'
 CLASS_PREFIX_FOR_MOBILE         = 'm'
@@ -662,6 +663,7 @@ class EDITABLE(FORM):
                     value= value,
                     _disabled=p_disabled,
                     _multiple= multiple,
+                    _class=FIELD_SELECT_BOX_CLASS,
                     _style='width:100%;')
             value = [select, text]
             p_class.append(FIELD_SELECT_CLASS)

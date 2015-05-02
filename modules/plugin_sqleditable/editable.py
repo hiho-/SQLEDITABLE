@@ -353,6 +353,8 @@ class EDITABLE(FORM):
             self.ajax_button_value = current.T(DEFAULT_BUTTON_VALUE)
             self.ajax_button_design_class = 'btn btn-primary'
             self.ajax_button_style = 'padding:8px 15px;margin: 10px;'
+            self.ajax_before = kwargs.get('ajax_before', 'jQuery.noop;')
+            self.ajax_after = kwargs.get('ajax_after', 'jQuery.noop;')
 
             self.touch_device = kwargs.get('touch_device', 'Auto')
             if self.touch_device == 'Auto':
@@ -868,6 +870,7 @@ class EDITABLE(FORM):
         ajax    = \
 """
 jQuery('.%(ajax_button_class)s').on('click', function () {
+    %(ajax_before)s
     jQuery.ajax({
         url: '%(url)s',
         type: 'POST',
@@ -900,6 +903,7 @@ jQuery('.%(ajax_button_class)s').on('click', function () {
     .always(function (data) {
         jQuery('.%(process_dialog)s').modal('hide');
         jQuery('.%(first_cell)s').focus();
+        %(ajax_after)s
     });
 });
 """ % dict( url=self.url,
@@ -911,7 +915,9 @@ jQuery('.%(ajax_button_class)s').on('click', function () {
             msg_failure=self.msg_failure_class,
             msg_error_id=self.msg_error_id,
             process_dialog=self.process_dialog_class,
-            first_cell = FIRST_CELL_CLASS)
+            first_cell = FIRST_CELL_CLASS,
+            ajax_before=self.ajax_before,
+            ajax_after=self.ajax_after)
 
         keydown_js =\
 """

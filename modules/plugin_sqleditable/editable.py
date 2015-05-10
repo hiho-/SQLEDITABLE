@@ -1649,7 +1649,7 @@ class SQLEDITABLE(EDITABLE):
                 from gluon.dal import bar_decode_string
             for record in record_data:
                 for field in fields:
-                    if '|' in record[field]:
+                    if record[field] and '|' in record[field]:
                         record[field] = bar_decode_string(record[field])
             return record_data
 

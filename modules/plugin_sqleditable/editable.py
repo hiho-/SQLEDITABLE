@@ -1094,7 +1094,7 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
         def deletable_element(mode=None):
             id = DELETABLE_ID_FORMAT % dict(row=rowno)
             el = editable.element(_id=id)
-            if mode == 'td':
+            if el and mode == 'td':
                 return el.parent
             return el
 

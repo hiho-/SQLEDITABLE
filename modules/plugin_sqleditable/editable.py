@@ -1360,7 +1360,9 @@ class SQLEDITABLE(EDITABLE):
 
         # record list
         if self.is_ajax() is False:
-            if self.record and not isinstance(self.record, RecordArray):
+            if self.record == 'BLANK':
+                self.record = RecordArray([], self.header)
+            elif self.record and not isinstance(self.record, RecordArray):
                 self.record = self.db_read(self.record)
             elif self.record is None:
                 self.record = self.db_read(None)

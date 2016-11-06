@@ -1677,9 +1677,11 @@ class SQLEDITABLE(EDITABLE):
             elif isinstance(record, (int,long,str)):
                 record = [record]
             else:
-                RuntimeError('Invalid record parameter')
+                pass
 
-            for r in record:
+            for i, r in enumerate(record):
+                if i >= self.maxrow:
+                    break
                 if not isinstance(r, (list,tuple)):
                     r = [r]
                 rec = Record(dict([(k.name, f) for k, f in \

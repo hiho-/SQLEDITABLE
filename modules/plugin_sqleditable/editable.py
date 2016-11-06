@@ -1680,7 +1680,7 @@ class SQLEDITABLE(EDITABLE):
                 pass
 
             for i, r in enumerate(record):
-                if i >= self.maxrow:
+                if self.maxrow and i >= self.maxrow:
                     break
                 if not isinstance(r, (list,tuple)):
                     r = [r]

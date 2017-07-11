@@ -1198,7 +1198,7 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
                     for k,v in keys:
                         record[k.name] = v
                     record[STORED_KEY_VALUE] = \
-                                            dict([(k.name, v) for k, v in zip(self.header.key(),value[0])])
+                                            dict([(k.name, v) for k, v in keys])
                 if value[1]:
                     record[RECORD_HASH_FIELD] = value[1]
                     if value[1] == DUMMY_RECORD_HASH_VALUE:

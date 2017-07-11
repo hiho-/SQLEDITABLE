@@ -2,7 +2,7 @@
 # coding: utf8
 
 # SQLEDITABLE plugin for web2py flamework
-# Copyrighted by Hitoshi Kato <hi21alt-gl@yashoo.co.jp>
+# Copyrighted by Hitoshi Kato <hi21alt-gl@yahoo.co.jp>
 # License: LGPLv3
 
 from gluon import *
@@ -10,6 +10,7 @@ from gluon.html import BUTTON
 from gluon.utils import web2py_uuid, simple_hash
 from gluon.storage import Storage
 from os import urandom
+import base64
 
 FORMKEY_STRING                  = '_formkey[%s]'
 FORMNAME                        = 'ajaxform'
@@ -427,21 +428,21 @@ class EDITABLE(FORM):
                                                     'mindmup-editabletable.js'))
         response._caller=extract
 
-    def check_salt(self, salt, base64=False):
+    def check_salt(self, salt, code_base64=False):
         if self.hash_salt_length <= 0:
             return ''
         if not salt:
             salt = urandom(self.hash_salt_length)
         elif len(salt) != self.hash_salt_length:
             try:
-                salt = salt.decode('base64')
+                salt = base64.b64decode(salt)
             except:
                 salt = None
             finally:
                 if salt and len(salt) != self.hash_salt_length:
                     salt = self.check_salt(None)
-        if base64:
-            return salt.encode('base64')
+        if code_base64:
+            return base64.b64encode(salt)
         else:
             return salt
 
@@ -484,7 +485,7 @@ class EDITABLE(FORM):
                 keys.extend(tablehashes)
                 serialized = '|'.join(str(k) for k in keys if k)
                 tablehash = self.generate_hash(serialized)
-            hash_salt = self.check_salt(self.hash_salt, base64=True)
+            hash_salt = self.check_salt(self.hash_salt, code_base64=True)
             hashname =  TABLEHASH_STRING % self.formname
             self.session[hashname] = list(self.session.get(hashname,[]))[-4:] +\
                                         [[formkey, [tablehash, hash_salt]]]
@@ -526,7 +527,7 @@ class EDITABLE(FORM):
                 value = el[KEY_ID_TAG_ATTR]
                 hash = el[RECORD_HASH_TAG_ATTR]
                 if value:
-                    keys.append(value.decode('base64'))
+                    keys.append(base64.b64decode(value.encode()).decode())
                 if hash:
                     recordhashes.append(hash)
             else:
@@ -589,7 +590,7 @@ class EDITABLE(FORM):
         selects = editable.elements('select')
         for select in selects:
             div = select.sibling('div')
-            value = div[0] if len(div) > 0 else None
+            value = div[0].decode() if len(div) > 0 else None
             if value:
                 value = value.split(',')
                 for option in select.components:
@@ -715,7 +716,7 @@ class EDITABLE(FORM):
         parm = {}
         if rowno is not None:
             parm[KEY_ID_TAG_ATTR] = \
-                            self.compress_key_value(record).encode('base64')
+                            base64.b64encode(self.compress_key_value(record).encode()).decode()
             id = KEY_ID_FORMAT % dict(row=rowno)
         else:
             id = False
@@ -753,7 +754,7 @@ class EDITABLE(FORM):
 
         if self.vertical:
             first = True
-            for r in xrange(maxrow):
+            for r in range(maxrow):
                 record = set_record(r)
                 line = [TH('%0d' % (r+1))] if self.lineno else []
                 if self.deletable:
@@ -780,7 +781,7 @@ class EDITABLE(FORM):
         else:
             if self.deletable:
                 line = [TH(self.deleteable_label, _class=DELETABLE_CLASS)]
-                for r in xrange(maxrow):
+                for r in range(maxrow):
                     line.append(self.__deletable_tag(r))
                 contents.append(TR(line))
 
@@ -790,7 +791,7 @@ class EDITABLE(FORM):
                 if f.readable:
                     line.append(TH(f.label))
 
-                for r in xrange(maxrow):
+                for r in range(maxrow):
                     record = set_record(r)
                     p_class = []
                     p_style = []
@@ -812,7 +813,7 @@ class EDITABLE(FORM):
 
             line = []
             line.append(self.__key_tag(None, None))     # title
-            for r in xrange(maxrow):
+            for r in range(maxrow):
                 record = set_record(r)
                 line.append(self.__key_tag(record, r))
             contents.append(TR(line))
@@ -820,7 +821,7 @@ class EDITABLE(FORM):
         return TBODY(contents)
 
     def process_dialog(self, message=''):
-        if isinstance(message, (str, unicode)):
+        if isinstance(message, str):
             dialog = DIV(DIV(DIV(DIV(message, _class='modal-header'),
                         DIV(DIV(DIV(_class='progress-bar', _role='progressbar', _style='width:100%',
                             **{'_asria-valuenow':'100', '_aria-valuemin':'0', '_aria-valuemax':'100'}),
@@ -834,7 +835,7 @@ class EDITABLE(FORM):
 
     def add_button(self, id, value, _class, _style):
         import gluon.languages
-        if isinstance(value, (str, unicode, gluon.languages.lazyT)):
+        if isinstance(value, (str, gluon.languages.lazyT)):
             text = value
         elif value is None:
             text = AJAX_BUTTON_VALUE
@@ -1162,7 +1163,7 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
                 if el is None:
                     return None, None
                 value = self.compress_key_value(
-                                        el[KEY_ID_TAG_ATTR].decode('base64'))
+                                        base64.b64decode(el[KEY_ID_TAG_ATTR].encode()).decode())
                 recordhash = el[RECORD_HASH_TAG_ATTR]
                 inputhash = el[INPUT_HASH_TAG_ATTR]
                 return (value, recordhash, inputhash), el
@@ -1193,11 +1194,11 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
                 return None
             elif value:
                 if value[0]:
-                    keys = zip(self.header.key(),value[0])
+                    keys = list(zip(self.header.key(),value[0]))
                     for k,v in keys:
                         record[k.name] = v
                     record[STORED_KEY_VALUE] = \
-                                            dict([(k.name, v) for k, v in keys])
+                                            dict([(k.name, v) for k, v in zip(self.header.key(),value[0])])
                 if value[1]:
                     record[RECORD_HASH_FIELD] = value[1]
                     if value[1] == DUMMY_RECORD_HASH_VALUE:
@@ -1505,6 +1506,8 @@ class SQLEDITABLE(EDITABLE):
     def field_validate(self, requires, value):
         if not isinstance(requires, (list, tuple)):
             requires = [requires]
+        if isinstance(value, bytes):
+            value = value.decode()
         for validator in requires:
             try:
                 value,error = validator(value)
@@ -1720,7 +1723,7 @@ class SQLEDITABLE(EDITABLE):
             if rec:
                 value = {}
                 value['key_value'] = \
-                                self.compress_key_value(rec).encode('base64')
+                                base64.b64encode(self.compress_key_value(rec).encode()).decode()
                 if self.record_hash_available:
                     recordhash = self.generate_recordhash(rec)
                     value['record_hash'] = recordhash
@@ -1764,7 +1767,7 @@ class SQLEDITABLE(EDITABLE):
                 if rec:
                     value = {}
                     value['key_value'] = \
-                                self.compress_key_value(rec).encode('base64')
+                                base64.b64encode(self.compress_key_value(rec).encode()).decode()
                     if self.record_hash_available:
                         recordhash = self.generate_recordhash(rec)
                         value['record_hash'] = recordhash

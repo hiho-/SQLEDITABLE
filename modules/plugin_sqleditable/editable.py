@@ -1142,7 +1142,7 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
                 td = TD(value, _class=el['_class'], _id=el['_id'],
                                 _name=el['_name'], _tabindex=el['_tabindex'],
                                 _style=el['_style'])
-                editable.element(_id=el['_id'], replace=td)
+                editable.element(_id=str(el['_id']), replace=td)
 
     def set_error_class(self, editable, rowno, field=None):
         if field:

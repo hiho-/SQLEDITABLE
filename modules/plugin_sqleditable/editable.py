@@ -828,7 +828,7 @@ class EDITABLE(FORM):
                                  _class='progress progress-striped active'),
                              _class='modal-body'),
                         _class='modal-content'), _class='modal-dialog'),
-                    _class='%s modal fade' % self.process_dialog_class)
+                    _class='%s modal' % self.process_dialog_class)
         else:
             dialog = message
         return dialog
@@ -838,14 +838,12 @@ class EDITABLE(FORM):
         if isinstance(value, (str, gluon.languages.lazyT)):
             text = value
         elif value is None:
-            text = AJAX_BUTTON_VALUE
+            text = 'OK'
         else:
             text = None
         if text:
-            value = SPAN(I(_type='button', _class='glyphicon glyphicon-ok',
-                           _style='margin-right: 5px;'), text, _style='font-size: 1em;')
-        return BUTTON(value, _type='button', _class=_class, _style=_style,
-                      _id=id)
+            value = SPAN(text, _style='font-size: 1em;')
+        return BUTTON(value, _type='button', _class=_class, _style=_style, _id=id)
 
     def build_js(self):
         """

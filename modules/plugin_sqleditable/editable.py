@@ -12,19 +12,19 @@ from gluon.storage import Storage
 from os import urandom
 import base64
 
-FORMKEY_STRING                  = '_formkey[%s]'
+FORMKEY_STRING                  = '_formkey[{0}]'
 FORMNAME                        = 'ajaxform'
-TABLEHASH_STRING                = '_tablehash[%s]'
+TABLEHASH_STRING                = '_tablehash[{0}]'
 
 FORMKEY_ID                      = 'formkey'
 FORMNAME_ID                     = 'formname'
 EDITABLE_ID                     = 'editable'
 AJAX_BUTTON_CLASS                  = 'ajax_btn'
-ID_FORMAT                       = '%(row)d_%(field)s'
+ID_FORMAT                       = '{row:d}_{field:s}'
 CELL_ID_FORMAT                  = 'cell_' + ID_FORMAT +'_'
 PARENT_ID_FORMAT                = 'parent_' + ID_FORMAT +'_'
-DELETABLE_ID_FORMAT             = 'd(%(row)d)'
-KEY_ID_FORMAT                   = 'k(%(row)d)'
+DELETABLE_ID_FORMAT             = 'd({row:d})'
+KEY_ID_FORMAT                   = 'k({row:d})'
 KEY_ID_TAG_ATTR                 = '_' + 'data-keyid'
 
 MSG_SUCCESS_CLASS               = 'message_success'
@@ -486,7 +486,7 @@ class EDITABLE(FORM):
                 serialized = '|'.join(str(k) for k in keys if k)
                 tablehash = self.generate_hash(serialized)
             hash_salt = self.check_salt(self.hash_salt, code_base64=True)
-            hashname =  TABLEHASH_STRING % self.formname
+            hashname =  TABLEHASH_STRING.format(self.formname)
             self.session[hashname] = list(self.session.get(hashname,[]))[-4:] +\
                                         [[formkey, [tablehash, hash_salt]]]
             return tablehash
@@ -496,7 +496,7 @@ class EDITABLE(FORM):
     def generate_formkey(self):
         if self.session:
             formkey = web2py_uuid()
-            keyname =  FORMKEY_STRING % self.formname
+            keyname =  FORMKEY_STRING.format(self.formname)
             self.session[keyname] = list(self.session.get(keyname,[]))[-4:] +\
                                                                     [formkey]
             return formkey
@@ -537,7 +537,7 @@ class EDITABLE(FORM):
         serialized = '|'.join(str(k) for k in keys)
 
         if self.session:
-            hashname =  TABLEHASH_STRING % self.formname
+            hashname =  TABLEHASH_STRING.format(self.formname)
             tablehashes = dict(self.session.get(hashname, []))
             if(formkey and tablehashes and formkey in tablehashes):
                 (tablehash,hash_salt) = tablehashes[formkey]
@@ -558,7 +558,7 @@ class EDITABLE(FORM):
 
     def check_formkey(self, formkey):
         if self.session:
-            keyname =  FORMKEY_STRING % self.formname
+            keyname =  FORMKEY_STRING.format(self.formname)
             formkeys = list(self.session.get(keyname, []))
             if(formkey and formkeys and formkey in formkeys):
                 self.session[keyname].remove(formkey)
@@ -581,7 +581,7 @@ class EDITABLE(FORM):
 
     def refresh_editable(self, editable):
         if self.next and not self.errors:
-            script = 'location.href = "%s"' % self.next
+            script = 'location.href = "{0}"'.format(self.next)
             return DIV(SCRIPT(script, _type='text/javascript'), editable)
 
         if not isinstance(editable, DIV):
@@ -635,7 +635,7 @@ class EDITABLE(FORM):
         else:
             if self.lineno:
                 maxrow = self.maxrow if self.maxrow else len(self.record)
-                line = [TH('%0d' % r) for r in range(1, maxrow+1)]
+                line = [TH('{0:d}'.format(r)) for r in range(1, maxrow+1)]
             else:
                 return None
             head.extend(line)
@@ -658,7 +658,7 @@ class EDITABLE(FORM):
             else:
                 val = value
             text = DIV(val, _style='display:none;',
-                       _id=CELL_ID_FORMAT % dict(field=id, row=rowno))
+                       _id=CELL_ID_FORMAT.format(field=id, row=rowno))
             opt = [OPTION(l, _value=v) for v, l in field.inset['items']]
 
             select = SELECT(
@@ -679,7 +679,7 @@ class EDITABLE(FORM):
                     _checked=True if value else False,
                     _value = 'on' if value else 'off',
                     _disabled=p_disabled,
-                    _id=CELL_ID_FORMAT % dict(field=id, row=rowno))
+                    _id=CELL_ID_FORMAT.format(field=id, row=rowno))
             p_class.append('parent')
             id_type = PARENT_ID_FORMAT
 
@@ -703,12 +703,12 @@ class EDITABLE(FORM):
         p_style = ' '.join(p_style) if p_style else False
         td = TD(value, _style=p_style, _class =p_class,
                 _disabled=p_disabled, _name=type,
-                _id=id_type % dict(field=id, row=rowno))
+                _id=id_type.format(field=id, row=rowno))
         return td
 
     def __deletable_tag(self, rowno):
         value = INPUT(_type='checkbox', _checked=False, _value='off',
-                      _id=DELETABLE_ID_FORMAT % dict(row=rowno))
+                      _id=DELETABLE_ID_FORMAT.format(row=rowno))
         td = TD(value, _class=DELETABLE_CLASS + ' parent')
         return td
 
@@ -717,7 +717,7 @@ class EDITABLE(FORM):
         if rowno is not None:
             parm[KEY_ID_TAG_ATTR] = \
                             base64.b64encode(self.compress_key_value(record).encode()).decode()
-            id = KEY_ID_FORMAT % dict(row=rowno)
+            id = KEY_ID_FORMAT.format(row=rowno)
         else:
             id = False
         if record:
@@ -756,7 +756,7 @@ class EDITABLE(FORM):
             first = True
             for r in range(maxrow):
                 record = set_record(r)
-                line = [TH('%0d' % (r+1))] if self.lineno else []
+                line = [TH('{0:d}'.format(r+1))] if self.lineno else []
                 if self.deletable:
                     line.append(self.__deletable_tag(r))
                 for f, v in record.all():
@@ -828,7 +828,7 @@ class EDITABLE(FORM):
                                  _class='progress progress-striped active'),
                              _class='modal-body'),
                         _class='modal-content'), _class='modal-dialog'),
-                    _class='%s modal' % self.process_dialog_class)
+                    _class='{0} modal'.format(self.process_dialog_class))
         else:
             dialog = message
         return dialog
@@ -850,135 +850,135 @@ class EDITABLE(FORM):
         build javascript for field check and ajax.
         """
         # js snipped
-        onload  = "jQuery(document).ready(function () {%s});\n"
-        bind    = "jQuery('#%s').on('load', function () {%s});\n"
-        triger  = "jQuery('#%s').trigger('load');\n" % self.editable_id
-        tb_js   = "jQuery('#%s').editableTableWidget();\n" % self.editable_id
-        validate= "jQuery('#%s').on('validate', 'td.%s', function (evt, value) {%s});\n"
-        if_js   = "if(!(%s)){return false;\n}"
-        elif_js = "else if(!(%s)){return false;\n}"
-        else_js = "else{return !!(%s);\n}"
-        noif_js = "return !!(%s);\n"
+        onload  = "jQuery(document).ready(function () {{{0}}});\n"
+        bind    = "jQuery('#{0}').on('load', function () {{{1}}});\n"
+        triger  = "jQuery('#{0}').trigger('load');\n".format(self.editable_id)
+        tb_js   = "jQuery('#{0}').editableTableWidget();\n".format(self.editable_id)
+        validate= "jQuery('#{0}').on('validate', 'td.{1}', function (evt, value) {{{2}}});\n"
+        if_js   = "if(!({0})){{return false;\n}}"
+        elif_js = "else if(!({0})){{return false;\n}}"
+        else_js = "else{{return !!({0});\n}}"
+        noif_js = "return !!({0});\n"
         condition \
-          = {'range'  :"value >= %d && value <= %d",
-             'length' :"value.trim().length >= %d && value.trim().length <= %d",
+          = {'range'  :"value >= {0} && value <ƒ= {1}",
+             'length' :"value.trim().length >= {0} && value.trim().length <= {1}",
              'integer':"value == parseInt(value) || value == ''",
              'number' :"(!isNaN(parseFloat(value)) && isFinite(value)) || value==''"}
-        focus  = "jQuery('.%s').focus();" % FIRST_CELL_CLASS
+        focus  = "jQuery('.{0}').focus();".format(FIRST_CELL_CLASS)
 
         ajax    = \
 """
-jQuery('.%(ajax_button_class)s').on('click', function () {
-    %(ajax_before)s
-    jQuery.ajax({
-        url: '%(url)s',
+jQuery('.{ajax_button_class}').on('click', function () {{
+    {ajax_before}
+    jQuery.ajax({{
+        url: '{url}',
         type: 'POST',
         dataType: 'html',
-        data: { %(editable_id)s: jQuery('#%(editable_id)s').html(),
-            formkey: jQuery('#%(formkey_id)s').val(),
-            formname: jQuery('#%(formname_id)s').val()
-        },
-        beforeSend: function (xhr) {
-            jQuery('.%(process_dialog)s').modal({
+        data: {{ {editable_id}: jQuery('#{editable_id}').html(),
+            formkey: jQuery('#{formkey_id}').val(),
+            formname: jQuery('#{formname_id}').val()
+        }},
+        beforeSend: function (xhr) {{
+            jQuery('.{process_dialog}').modal({{
                 backdrop: 'static',
                 keyboard: false
-            });
-        }
-    })
-    .done(function (data) {
-        jQuery('#%(editable_id)s').html(data);
-        if (document.getElementById('%(msg_error_id)s')) {
-            jQuery('.%(msg_failure)s').show();
-            jQuery('.%(msg_success)s').hide();
-        } else {
-            jQuery('.%(msg_success)s').show();
-            jQuery('.%(msg_failure)s').hide();
-        }
-    })
-    .fail(function (data) {
-        jQuery('.%(msg_success)s').hide();
-        jQuery('.%(msg_failure)s').show();
-    })
-    .always(function (data) {
-        jQuery('.%(process_dialog)s').modal('hide');
-        jQuery('.%(first_cell)s').focus();
-        %(ajax_after)s
-    });
-});
-""" % dict( url=self.url,
-            editable_id=self.editable_id,
-            ajax_button_class=self.ajax_button_class,
-            formkey_id=self.formkey_id,
-            formname_id=self.formname_id,
-            msg_success=self.msg_success_class,
-            msg_failure=self.msg_failure_class,
-            msg_error_id=self.msg_error_id,
-            process_dialog=self.process_dialog_class,
-            first_cell = FIRST_CELL_CLASS,
-            ajax_before=self.ajax_before,
-            ajax_after=self.ajax_after)
+            }});
+        }}
+    }})
+    .done(function (data) {{
+        jQuery('#{editable_id}').html(data);
+        if (document.getElementById('{msg_error_id}')) {{
+            jQuery('.{msg_failure}').show();
+            jQuery('.{msg_success}').hide();
+        }} else {{
+            jQuery('.{msg_success}').show();
+            jQuery('.{msg_failure}').hide();
+        }}
+    }})
+    .fail(function (data) {{
+        jQuery('.{msg_success}').hide();
+        jQuery('.{msg_failure}').show();
+    }})
+    .always(function (data) {{
+        jQuery('.{process_dialog}').modal('hide');
+        jQuery('.{first_cell}').focus();
+        {ajax_after}
+    }});
+}});
+""".format(url=self.url,
+           editable_id=self.editable_id,
+           ajax_button_class=self.ajax_button_class,
+           formkey_id=self.formkey_id,
+           formname_id=self.formname_id,
+           msg_success=self.msg_success_class,
+           msg_failure=self.msg_failure_class,
+           msg_error_id=self.msg_error_id,
+           process_dialog=self.process_dialog_class,
+           first_cell = FIRST_CELL_CLASS,
+           ajax_before=self.ajax_before,
+           ajax_after=self.ajax_after)
 
         keydown_js =\
 """
-jQuery(document).on('keydown', 'td:not(.%(noedit)s,.%(deletable)s)', function (e) {
+jQuery(document).on('keydown', 'td:not(.{noedit},.{deletable})', function (e) {{
     var child = jQuery(this).children(':checkbox, select');
-    if (child.is(':checkbox')) {
-        if ( e.which === 13) {
+    if (child.is(':checkbox')) {{
+        if ( e.which === 13) {{
             child.trigger('click');
             return false;
-        }
-    } else if (child.is('select')) {
-        if ( e.which === 13 ) {
+        }}
+    }} else if (child.is('select')) {{
+        if ( e.which === 13 ) {{
             child.focus();
             return false;
-        }
-    }
-});
-jQuery(document).on('keydown', 'select', function (e) {
-    if ( e.which === 13 || e.which === 9 || e.which === 27 ) {
+        }}
+    }}
+}});
+jQuery(document).on('keydown', 'select', function (e) {{
+    if ( e.which === 13 || e.which === 9 || e.which === 27 ) {{
         jQuery(this).parent('td').focus();
 	return false;
-    }
-});
-""" % dict(noedit=NO_EDIT_CLASS, deletable=DELETABLE_CLASS)
+    }}
+}});
+""".format(noedit=NO_EDIT_CLASS, deletable=DELETABLE_CLASS)
 
         checkbox_js =\
 """
-jQuery(document).on('click', ':checkbox', function (e) {
-    if (jQuery(this).prop('checked')) {
+jQuery(document).on('click', ':checkbox', function (e) {{
+    if (jQuery(this).prop('checked')) {{
         jQuery(this).val('on');
-    } else {
+    }} else {{
         jQuery(this).val('off');
-    }
+    }}
     e.stopPropagation();
-});
-jQuery(document).on('click', 'td:not(.%(noedit)s):has(:checkbox)', function(e){
+}});
+jQuery(document).on('click', 'td:not(.{noedit}):has(:checkbox)', function(e) {{
     jQuery(this).children(':checkbox').trigger('click');
-});
-""" % dict(noedit=NO_EDIT_CLASS)
+}});
+""".format(noedit=NO_EDIT_CLASS)
 
         select_js =\
 """
-jQuery(document).on('change', 'td:not(.%(noedit)s)>select', function () {
+jQuery(document).on('change', 'td:not(.{noedit})>select', function () {{
     jQuery(this).prev('div').text(jQuery(this).val());
-});
-""" % dict(noedit=NO_EDIT_CLASS)
+}});
+""".format(noedit=NO_EDIT_CLASS)
 
         date_time_js = \
 """
-jQuery(document).on('blur', 'input.%(field_class)s' , function (e) {
+jQuery(document).on('blur', 'input.{field_class}' , function (e) {{
         var id = jQuery(this).attr('data-id');
         jQuery(this).hide();
         jQuery('#'+id).text(jQuery(this).val());
-});
-jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
-    if ( e.which === 13 ) {
+}});
+jQuery(document).on('keypress', 'input.{field_class}' , function (e) {{
+    if ( e.which === 13 ) {{
         var id = jQuery(this).attr('data-id');
         jQuery(this).hide();
         jQuery('#'+id).text(jQuery(this).val()).focus();
         return false;
-    }
-});
+    }}
+}});
 """
 
         # build logics
@@ -988,9 +988,9 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
             for f in self.header.readable():
                 cond = []
                 if f.has_attr('range'):
-                    cond.append(condition['range'] % tuple(f.range))
+                    cond.append(condition['range'].format(*f.range))
                 if f.has_attr('length'):
-                    cond.append(condition['length'] % tuple(f.length))
+                    cond.append(condition['length'].format(*f.length))
                 if f.type == 'integer':
                     cond.append(condition['integer'])
                 elif f.type == 'number':
@@ -1000,16 +1000,15 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
                 last = len(cond)-1
                 for n, cd in enumerate(cond):
                     if n == 0 and last == 0:
-                        js += noif_js % cd
+                        js += noif_js.format(cd)
                     elif n == 0:
-                        js += if_js % cd
+                        js += if_js.format(cd)
                     elif n > 0 and n < last:
-                        js += elif_js % cd
+                        js += elif_js.format(cd)
                     else:
-                        js += else_js % cd
+                        js += else_js.format(cd)
                 if js:
-                    script += validate % (self.editable_id,
-                                        FIELD_CLASS_PREFIX + str(f.name), js)
+                    script += validate.format(self.editable_id, FIELD_CLASS_PREFIX + str(f.name), js)
         # date/time/checkbox/listbox
         date = time = datetime= boolean = select = False
         for f in self.header.readable():
@@ -1018,26 +1017,25 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
                 script += checkbox_js
                 boolean = True
             if date is False and (f.type == 'date' and f.writable==True):
-                script += date_time_js % dict(field_class=self.field_date_class)
+                script += date_time_js.format(field_class=self.field_date_class)
                 date = True
             if time is False and (f.type == 'time' and f.writable==True):
-                script += date_time_js % dict(field_class=self.field_time_class)
+                script += date_time_js.format(field_class=self.field_time_class)
                 time = True
             if datetime is False and \
                                     (f.type == 'datetime' and f.writable==True):
-                script += date_time_js % \
-                                    dict(field_class=self.field_datetime_class)
+                script += date_time_js.format(field_class=self.field_datetime_class)
                 datetime = True
             if select is False and f.has_attr('inset'):
                 script += select_js
                 select = True
 
         script += keydown_js
-        script = bind % (self.editable_id, script)
+        script = bind.format(self.editable_id, script)
         script += triger
         script += focus
         script += ajax
-        script = onload % script
+        script = onload.format(script)
         return script
 
     def build_editable(self):
@@ -1082,16 +1080,16 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
                        'deletable':deletable flag
         '''
         def field_element(field, mode=None):
-            id = CELL_ID_FORMAT % dict(field=field, row=rowno)
+            id = CELL_ID_FORMAT.format(field=field, row=rowno)
             el = editable.element(_id=id)
             if mode=='td' and el.tag != 'td':
                     return el.parent
             return el
         def key_element():
-            id = KEY_ID_FORMAT % dict(row=rowno)
+            id = KEY_ID_FORMAT.format(row=rowno)
             return editable.element(_id=id)
         def deletable_element(mode=None):
-            id = DELETABLE_ID_FORMAT % dict(row=rowno)
+            id = DELETABLE_ID_FORMAT.format(row=rowno)
             el = editable.element(_id=id)
             if el and mode == 'td':
                 return el.parent
@@ -1232,7 +1230,7 @@ jQuery(document).on('keypress', 'input.%(field_class)s' , function (e) {
 
         # remove error message & error class
         editable.elements(_id=self.msg_error_id, replace=None)
-        els = editable.elements('td.%s' % self.cell_error_class)
+        els = editable.elements('td.{0}'.format(self.cell_error_class))
         for el in els:
             el.remove_class(self.cell_error_class)
 
@@ -1863,14 +1861,14 @@ class SQLEDITABLE(EDITABLE):
             self.table._db.commit()
         return bool(status)
 
-    def accepts(self, request_vars,session=None, formname='tb_%(tablename)s',
+    def accepts(self, request_vars,session=None, formname='tb_{tablename}',
                 parcel_update=True, onvalidation=None, hideerror=False,
                 **kwargs):
         if request_vars.__class__.__name__ == 'Request':
             request_vars = request_vars.post_vars
 
         self.parcel_update = parcel_update
-        formname = formname % dict(tablename=self.table._tablename)
+        formname = formname.format(tablename=self.table._tablename)
         status = EDITABLE.accepts(self, request_vars, session, formname,
                                                         onvalidation, **kwargs)
         if status:

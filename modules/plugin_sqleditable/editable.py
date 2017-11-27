@@ -860,7 +860,7 @@ class EDITABLE(FORM):
         else_js = "else{{return !!({0});\n}}"
         noif_js = "return !!({0});\n"
         condition \
-          = {'range'  :"value >= {0} && value <ƒ= {1}",
+          = {'range'  :"value >= {0} && value <= {1}",
              'length' :"value.trim().length >= {0} && value.trim().length <= {1}",
              'integer':"value == parseInt(value) || value == ''",
              'number' :"(!isNaN(parseFloat(value)) && isFinite(value)) || value==''"}

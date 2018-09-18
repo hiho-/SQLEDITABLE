@@ -17,6 +17,8 @@ FORMNAME                        = 'ajaxform'
 TABLEHASH_STRING                = '_tablehash[{0}]'
 
 FORMKEY_ID                      = 'formkey'
+MAX_FORMKEY                     = 5
+POS_FORMKEY_TO_COPY             = -(MAX_FORMKEY - 1)
 FORMNAME_ID                     = 'formname'
 EDITABLE_ID                     = 'editable'
 AJAX_BUTTON_CLASS                  = 'ajax_btn'
@@ -487,7 +489,7 @@ class EDITABLE(FORM):
                 tablehash = self.generate_hash(serialized)
             hash_salt = self.check_salt(self.hash_salt, code_base64=True)
             hashname =  TABLEHASH_STRING.format(self.formname)
-            self.session[hashname] = list(self.session.get(hashname,[]))[-4:] +\
+            self.session[hashname] = list(self.session.get(hashname,[]))[POS_FORMKEY_TO_COPY:] +\
                                         [[formkey, [tablehash, hash_salt]]]
             return tablehash
         else:
@@ -497,7 +499,7 @@ class EDITABLE(FORM):
         if self.session:
             formkey = web2py_uuid()
             keyname =  FORMKEY_STRING.format(self.formname)
-            self.session[keyname] = list(self.session.get(keyname,[]))[-4:] +\
+            self.session[keyname] = list(self.session.get(keyname,[]))[POS_FORMKEY_TO_COPY:] +\
                                                                     [formkey]
             return formkey
         else:
@@ -550,10 +552,13 @@ class EDITABLE(FORM):
                     self.hash_table = tablehash
                     return True
                 else:
+                    raise RuntimeError('Table-hash mismatch.')
                     return False
             else:
+                raise RuntimeError('There is not tablehash.')
                 return False
         else:
+            raise RuntimeError('There is not session.')
             return False
 
     def check_formkey(self, formkey):
@@ -564,8 +569,10 @@ class EDITABLE(FORM):
                 self.session[keyname].remove(formkey)
                 return True
             else:
+                raise RuntimeError('Too many open browser tabs (MAX {} in one session).'.format(MAX_FORMKEY))
                 return False
         else:
+            raise RuntimeError('There is not session.')
             return False
 
     def generate_inputhash(self, record):

@@ -1182,6 +1182,8 @@ jQuery(document).on('keypress', 'input.{field_class}' , function (e) {{
                 if hasattr(el,'tag') and el.tag=='input/' and \
                                                     el['_type']=='checkbox':
                     value = True if el['_value']=='on' else False
+                elif len(el) > 1 and isinstance(el[0], str):
+                    value = ''.join(el)
                 elif len(el):
                     value = el[0]
                 else:

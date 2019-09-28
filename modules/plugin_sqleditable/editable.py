@@ -7,8 +7,10 @@
 
 from gluon import *
 from gluon.html import BUTTON
-from gluon.utils import web2py_uuid, simple_hash
+from gluon.utils import web2py_uuid
 from gluon.storage import Storage
+from gluon._compat import to_bytes
+from hashlib import md5
 from os import urandom
 import base64
 
@@ -66,7 +68,6 @@ INPUT_HASH_TAG_ATTR             = '_' + 'data-inphash'
 DUMMY_RECORD_HASH_VALUE         = 'DUMMY'
 MSG_RECORD_HASH_CHANGED         = 'record has been changed'
 MSG_RECORD_HASH_DELETED         = 'record has been deleted'
-HASH_ALGORITHM                  = 'md5'
 HASH_SALT_LENGTH                = 8
 
 class FieldInfo(object):
@@ -455,7 +456,9 @@ class EDITABLE(FORM):
             salt = self.hash_salt = self.check_salt(None)
         else:
             salt = self.hash_salt if self.hash_salt else ''
-        return simple_hash(text, salt=salt, digest_alg=HASH_ALGORITHM)
+        text = to_bytes(text)
+        salt = to_bytes(salt)
+        return md5(text + salt).hexdigest()
 
     def compress_key_value(self, record):
         '''

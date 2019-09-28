@@ -1685,7 +1685,7 @@ class SQLEDITABLE(EDITABLE):
                     if not r in new_record:
                         new_record.append(r)
                 record = new_record
-            elif isinstance(record, (int,long,str)):
+            elif isinstance(record, (int,str)):
                 record = [record]
             else:
                 pass
